@@ -1,0 +1,9 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="product" type="ProductType"/>
+    <xs:complexType name="ProductType">
+        <xs:sequence>
+            <xs:element name="a" type="xs:integer"/>
+            <xs:element name="b" type="xs:integer"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

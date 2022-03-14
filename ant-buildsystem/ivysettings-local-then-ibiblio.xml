@@ -1,0 +1,12 @@
+<ivysettings>
+    <include file="${ivy.settings.dir}/resolver-fs-local.xml"/>
+    <include file="${ivy.settings.dir}/resolver-ibiblio.xml" />
+    <include file="${ivy.settings.dir}/default-cache-dir.xml"/>
+    <settings defaultResolver="chained" />
+    <resolvers>
+        <chain name="chained">
+            <resolver ref="fs-local" />
+            <resolver ref="ibiblio" />
+        </chain>
+    </resolvers>
+</ivysettings>

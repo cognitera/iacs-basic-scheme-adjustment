@@ -1,0 +1,1 @@
+wget http://www.ivoa.net/xml/VOTable/VOTable-1.1.xsd -O VOTable-1.1.xsd

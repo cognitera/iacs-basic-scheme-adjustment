@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VOTABLE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="xmlns:http://www.ivoa.net/xml/VOTable/VOTable-1.1.xsd"
+         xmlns:ovdm="http://www.ivoa.net/xml/ObjectVisibilityDM/ObjectVisibilityDM-v1.0.xsd" version="1.1"
+         xmlns="http://www.ivoa.net/xml/VOTable/v1.1">
+
+<RESOURCE type="results">
+    <DESCRIPTION>Object Visibility Simple Access Protocol</DESCRIPTION>
+    <INFO name="QUERY_STATUS" value="OK"/>
+    <PARAM name="INPUT:RA" ucd="ovdm.ra" datatype="float" utype="ovdm:ra.value"  value="10.68">
+        <DESCRIPTION> Specify the Right Ascension coordinate. To be specified in Equatorial Coordinates J2000.</DESCRIPTION>
+    </PARAM>
+    <PARAM name="INPUT:DEC" ucd="ovdm.dec" datatype="float" utype="ovdm:dec.value"  value="41.27">
+        <DESCRIPTION> Specify the Declination coordinate. To be specified in Equatorial Coordinates J2000.</DESCRIPTION>
+    </PARAM>
+    <PARAM name="INPUT:START_TIME" ucd="ovdm.st" datatype="float" utype="ovdm:start_time.value"  value="2018-02-22T23:00:00.0Z">
+        <DESCRIPTION> Specify the Start Time to check for visibility. To be specified in UTC time.</DESCRIPTION>
+    </PARAM>
+    <PARAM name="INPUT:END_TIME" ucd="ovmd.et" datatype="float" utype="ovdm:end_time.value"  value="2018-07-22T23:00:00.0Z">
+        <DESCRIPTION> Specify the End Time to check for visibility. To be specified in UTC.</DESCRIPTION>
+    </PARAM>
+    <PARAM name="INPUT:MIN_VIS" ucd="meta.id;min_vis" datatype="float" value="0.7">
+        <DESCRIPTION> Minimum visibility interval period</DESCRIPTION>
+    </PARAM>
+</RESOURCE>
+</VOTABLE>

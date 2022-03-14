@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="common-war"
+         basedir="."
+         default="build"
+         xmlns:contrib="http://net.sf.antcontrib"
+         xmlns:ivy="antlib:org.apache.ivy.ant">
+
+    <description>
+        common template for WAR applications
+    </description>
+    <dirname  property="common-war.basedir" file="${ant.file.common-war}"/>
+    <import file="${common-war.basedir}/build-common.xml"/>
+    <property file="${common-war.basedir}/build-base-war.properties"/>
+    
+
+    <target name="pre-war-hook">
+        <echo message="empty base implementation"/>
+    </target>
+
+    <target name="just-bef-war-hook">
+        <echo message="empty base implementation"/>
+    </target>
+
+    <!-- NB: A similar contraption is used in the 'build-common-jar.xml' file, in the
+         'check-whether-a-new-uberjar-is-necessary' target. The difference between these
+         two contraptions is that the one in the 'build-common-jar.xml' file is due
+         to what apparently is a bug in the jar/zipgroupfileset task. In contrast to the
+         above, the contraption used in this file is necessary as the WAR-type
+         projects embed a Build-Date attribute in their MANIFEST.MF file
+         Also, some WAR-type projects spit a VERSION file just before the Ant [war] task
+         is invoked (containing again, the timestamp of the build). So we have two
+         time-dependent pieces of information:
+         [1] the Build-Date attribute in the MANIFEST.MF file. This applies to all projects as the
+             logic is implemented in this here "base" Ant build file which is inherited by all
+             projects.
+         [2] the project-specfic, optional VERSION file. This applies only to those projects
+             that implement this logic as this may be done in an ad-hoc manner in the
+             project-specific build.xml files and is not implemented here.
+         The presence of *either* of the above two time-related bits of information would
+         cause the WAR to be rebuilt even if there have been no changes at all in the underlying
+         source files or HTML artifacts. Hence, the below contraption is necessary and not
+         simply a workaround due to a bug as is the similar contraption in the
+         'build-common-jar.xml' file.
+
+    -->
+    <target name="check-whether-a-new-war-is-necessary">
+        <uptodate property="no-need-to-update-war" targetfile="${dist.war.file}">
+            <srcfiles dir="${war.basedir}"            includes="**/*"   />  <!-- see 'Note 1' -->
+            <srcfiles dir="${build.classes.dir}"      includes="**/*"   />  <!-- (as above)   -->
+            <srcfiles dir="${lib-static-compile.dir}" includes ="**/*.*"/>
+            <srcfiles dir="${lib-static-run.dir}"     includes ="**/*.*"/>
+            <srcfiles dir="${lib-ivy-run.dir}"        includes ="**/*.*"/>
+        </uptodate>
+        <contrib:if>
+            <isset property="no-need-to-update-war"/>
+            <contrib:then>
+                <echo message="there is apparently no need to create a new WAR as neither the sources nor the dependencies have changed"/>
+            </contrib:then>
+            <contrib:else>
+                <echo message="it is necessary to create a new WAR as either the sources or some of the dependencies have changed"/>
+            </contrib:else>
+        </contrib:if>
+    </target>
+    
+    <target name="package"
+            depends="compile, build-run-deps, pre-war-hook, check-whether-a-new-war-is-necessary"
+            unless="no-need-to-update-war"
+            description="prepare WAR">
+      <antcall target="fail-if-all-symlinks-in-dir-not-ok">
+          <param name="the.dir" value="${lib-static-run.dir}"/>
+      </antcall>
+      <fail-if-file-not-exists file="${conf.webxml.file}" message="web.xml file [${conf.webxml.file}] not found"/>
+      <mkdir dir="${dist.dir}"/>
+      <tstamp>
+          <format property="NOW" pattern="yyyy-MM-dd HH:mm:ss zzz" locale="en,US"/>
+      </tstamp>
+      <antcall target="just-bef-war-hook"/>
+      <war destfile="${dist.war.file}" basedir="${war.basedir}"
+           webxml="${conf.webxml.file}" 
+           compress="${war.compress}" update="false">
+          <manifest>
+              <attribute name="Signature-Title" value="${ant.project.name}"/>
+              <attribute name="Built-By"        value="${user.name}"/>
+              <attribute name="Built-Date"      value="${NOW}"/>
+          </manifest>
+          <classes dir="${build.classes.dir}"/>
+
+          <lib dir="${lib-static-compile.dir}">
+              <include name ="*.jar"/>
+          </lib>
+          <lib dir="${lib-static-run.dir}">
+              <include name ="*.jar"/>
+          </lib>
+          <lib dir="${lib-ivy-run.dir}">
+              <include name ="*.jar"/>
+          </lib>
+
+      </war>
+    </target>
+
+    <target name="check-deployment-is-configured">
+        <fail message="Property &quot;deploy.dir&quot; needs to be set to a value">
+            <condition>
+                <or>
+                    <equals arg1="${deploy.dir}" arg2=""/>
+                    <not>
+                        <isset property="deploy.dir"/>
+                    </not>
+                </or>
+            </condition>
+        </fail>
+    </target>
+
+    <target name="deploy" depends="package, check-deployment-is-configured" description="deploy to local configured web server">
+      <echo message="copying ${dist.war.file} to ${deploy.dir}/${ant.project.name}.war"/>
+      <copy file="${dist.war.file}" tofile="${deploy.dir}/${ant.project.name}.war"/>
+    </target>
+
+    <target name="undeploy" depends="check-deployment-is-configured" description="delete from local configured web server">
+      <delete file="${deploy.dir}/${ant.project.name}.war"/>
+    </target>
+    
+    <property name="install.target" value="${install.effective.dir}/${ant.project.name}.war"/>
+
+    <target name="install" depends="build" description="Copy the main artifact (${dist.war.file}) to the configured location (${install.target})">
+        <copy file="${dist.war.file}" tofile="${install.target}"/>
+        <echo message="ant-build-install: ${install.target}"/>
+    </target>
+    
+</project>
+
+<!-- Note 1
+     =========================
+     In the case of the ${war.basedir} and the ${build.classes.dir} directories we really must
+     use the "**/*" mask as the value of the 'includes' attribute. Using the "**/*.*" mask as
+     we do for the other directories would be a mistake. The reason is that it is quite likely
+     that in the ${war.basedir} directory we may have files that lack a file extension. Likewise
+     even though the vast majority of the files in the ${build.classes.dir} directory are Java
+     class files and are, thus, captured by the "**/*.*", it is still likely that we may encounter
+     resource-type files that lack any extension. In contrast to the above two directories, in the
+     case of the other directories (that contain JAR dependencies) it is always the case that the
+     files we expect to find therein will always have an extension.
+
+-->

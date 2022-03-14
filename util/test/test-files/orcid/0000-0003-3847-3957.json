@@ -1,0 +1,46 @@
+{
+  "last-modified-date" : null,
+  "name" : null,
+  "other-names" : {
+    "last-modified-date" : null,
+    "other-name" : [ ],
+    "path" : "/0000-0003-3847-3957/other-names"
+  },
+  "biography" : {
+    "created-date" : {
+      "value" : 1460765230404
+    },
+    "last-modified-date" : {
+      "value" : 1502309875928
+    },
+    "content" : "",
+    "visibility" : "PUBLIC",
+    "path" : "/0000-0003-3847-3957/biography"
+  },
+  "researcher-urls" : {
+    "last-modified-date" : null,
+    "researcher-url" : [ ],
+    "path" : "/0000-0003-3847-3957/researcher-urls"
+  },
+  "emails" : {
+    "last-modified-date" : null,
+    "email" : [ ],
+    "path" : "/0000-0003-3847-3957/email"
+  },
+  "addresses" : {
+    "last-modified-date" : null,
+    "address" : [ ],
+    "path" : "/0000-0003-3847-3957/address"
+  },
+  "keywords" : {
+    "last-modified-date" : null,
+    "keyword" : [ ],
+    "path" : "/0000-0003-3847-3957/keywords"
+  },
+  "external-identifiers" : {
+    "last-modified-date" : null,
+    "external-identifier" : [ ],
+    "path" : "/0000-0003-3847-3957/external-identifiers"
+  },
+  "path" : "/0000-0003-3847-3957/person"
+}

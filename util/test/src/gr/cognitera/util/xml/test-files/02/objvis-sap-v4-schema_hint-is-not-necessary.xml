@@ -1,0 +1,29 @@
+<VOTABLE version="1.1"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:ssldm="http://www.ivoa.net/xml/ObjectViibilityDM/ObjectVisibilityDM-v1.0.xsd"
+         xmlns="http://www.ivoa.net/xml/VOTable/v1.1">
+    <RESOURCE type="results">
+        <DESCRIPTION>European Space Astronomy Centre. XMM-Newton SOC – Object Visibility Simple Access Protocol (ObjVisSAP)</DESCRIPTION>
+        <INFO name="QUERY_STATUS" value="OK"/>
+        <INFO name="SERVICE_PROTOCOL" value="1.0">ObjVisSAP</INFO>
+        <INFO name="REQUEST" value="queryData"/>
+        <INFO name="RA" value="10.68"/>
+        <INFO name="DEC" value="41.27"/>
+        <INFO name="START_TIME" value="2018-02-22T23:00:00.0Z"/>
+        <INFO name="END_TIME" value="2018-07-22T23:00:00.0Z"/>
+        <TABLE>
+            <FIELD ucd="ovdm.startVisibility" name="START_VISIBILITY" utype="ovdm:visibility.startVisibility.value" datatype="char" arraysize="*"/>
+            <FIELD ucd="ovdm.endVisibility" name="END_VISIBILITY" utype="ovdm:visibility.endVisibility.value" datatype="char" arraysize="*"/>
+            <FIELD ucd="ovdm.duration" name="DURATION" utype="ovdm:visibility.duration.value" datatype="double"/>
+            <DATA>
+                <TABLEDATA>
+                    <TR>
+                        <TD>1858-11-20T05:46:22.346Z</TD>
+                        <TD>1858-11-20T17:32:35.616Z</TD>
+                        <TD>42373</TD>
+                    </TR>
+                </TABLEDATA>
+            </DATA>
+        </TABLE>
+    </RESOURCE>
+</VOTABLE>

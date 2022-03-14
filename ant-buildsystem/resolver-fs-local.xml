@@ -1,0 +1,18 @@
+<ivysettings>
+    <property name="ivy.local.default.root"
+              value="${ivy-filesystem-repo-root}" override="false" />
+    <property name="ivy.local.default.ivy.pattern"
+              value="[organisation]/[module]/ivys/ivy-[revision].xml"
+              override="false" />
+    <property name="ivy.local.default.artifact.pattern"
+              value="[organisation]/[module]/[type]s/[artifact]-[revision].[ext]"
+              override="false" />
+    <resolvers>
+        <filesystem name="fs-local">
+            <ivy
+                pattern="${ivy.local.default.root}/${ivy.local.default.ivy.pattern}" />
+            <artifact
+                pattern="${ivy.local.default.root}/${ivy.local.default.artifact.pattern}" />
+        </filesystem>
+    </resolvers>
+</ivysettings>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<ivy-module version="2.0" 
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+    <info organisation="organisation-name" module="module-name" status="integration"/>
+    <configurations>
+        <conf name="build-system"  description="artifacts needed by the build-system itself"/>
+    </configurations>
+    <dependencies>
+        <!--dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" conf="build-system->master"/-->
+        <dependency org="com.puppycrawl.tools"     name="checkstyle"   rev="5.9"   conf="build-system->default"/>
+        <dependency org="com.google.code.findbugs" name="findbugs-ant" rev="3.0.0" conf="build-system->default"/>
+        <dependency org="net.sourceforge.pmd"      name="pmd-java"     rev="5.5.3" conf="build-system->default"/>
+    </dependencies>
+</ivy-module>

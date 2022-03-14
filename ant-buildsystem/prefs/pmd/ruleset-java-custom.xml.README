@@ -1,0 +1,5 @@
+The list of rulesets is              found in the 5.2.2 documentation here: pmd-doc-5.2.2/pmd-java/rules/index.html
+
+The canonical names for rulesets are found in the 5.2.2 sources       here: pmd-src-5.2.2/pmd-java/src/main/resources/rulesets/java
+
+pmd.rulesetfiles=java-basic, java-braces, java-clone, java-codesize, java-design, java-finalizers, java-imports, java-optimizations, java-strictexception, java-strings, java-unnecessary, java-unusedcode

@@ -1,0 +1,5 @@
+Obtained by executing the following on 2018-11-16 T 16:28:
+
+
+    $ wget --header="Accept: application/vnd.orcid+json" https://pub.orcid.org/v2.1/0000-0003-3847-3957/person -O 0000-0003-3847-3957.json
+    

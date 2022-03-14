@@ -1,0 +1,7 @@
+<a:a xmlns:a="foo:a"
+     xmlns:b="foo:b">
+    <b>
+        <b1>666</b1>
+        <b2>Beast</b2>
+    </b>
+</a:a>

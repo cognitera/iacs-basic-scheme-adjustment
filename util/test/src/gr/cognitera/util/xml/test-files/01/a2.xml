@@ -1,0 +1,7 @@
+<a:a xmlns:a="foo:a"
+     xmlns:b="foo:b">
+    <b>
+        <b1>not-an-integer</b1>
+        <b2>Beast</b2>
+    </b>
+</a:a>

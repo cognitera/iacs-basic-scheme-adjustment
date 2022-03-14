@@ -1,0 +1,4 @@
+NB: At the time of the below invocation I had set the visibility setting for the first name / last name fields on the ORCID
+    web site (https://orcid.org/my-orcid) to the most private setting ("only me")
+
+$ wget --header=Accept: application/vnd.orcid+json https://pub.orcid.org/v2.1/0000-0003-3031-1435/person -O 0000-0003-3031-1435.json

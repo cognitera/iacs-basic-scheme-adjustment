@@ -1,0 +1,4 @@
+Execute the below incantation from outside the java-mutil directory:
+
+    rm -fr java-mutil-2 && java-package-refactor -o java-mutil -d java-mutil-2 -c java-mutil/refactoring-notes/refactor.mutil.json -q
+

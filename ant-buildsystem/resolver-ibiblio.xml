@@ -1,0 +1,5 @@
+<ivysettings>
+    <resolvers>
+        <ibiblio name="ibiblio" m2compatible="true" />
+    </resolvers>
+</ivysettings>

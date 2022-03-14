@@ -1,0 +1,12 @@
+dist/
+build/
+ivy.xml.control
+lib-ivy-compile/
+lib-ivy-run/
+lib-ivy-test/
+ivy-reports/
+build.xml.*.log
+ivy-bs.xml.control
+lib-ivy-buildsystem/
+junit*.properties
+junitvmwatcher*.properties

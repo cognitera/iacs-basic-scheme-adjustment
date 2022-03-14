@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:ivy="antlib:org.apache.ivy.ant"
+         basedir="."
+         default="build"
+         name="cognitera-util">
+
+    <description>
+        domain-agnostic Java utilities
+    </description>
+
+    <import file="${basedir}/../ant-buildsystem/build-common-jar.xml"/> 
+
+</project>

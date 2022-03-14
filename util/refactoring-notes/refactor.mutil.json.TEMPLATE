@@ -1,0 +1,19 @@
+{"excludes":[".git"]
+ ,"anchors":["src","test/src"]
+ ,"exclusiveClasses":[  "mutil.base.*"
+                      , "mutil.io.*"
+                      , "mutil.jdbc.BaseDBFacade"
+                      , "mutil.jdbc.JdbcUtils"
+                      , "mutil.jdbc.BaseResource"
+                      , "mutil.jdbc.AbstractDataSourceUtil"                        
+                      , "mutil.crypto.*"
+                      , "mutil.servlet.ServletUtil"
+                      , "mutil.json.*"
+                      , "mutil.email.*"
+                      , "mutil.rest.*"
+                      ]
+ ,"translation":["mutil#some.other.package.name"]
+ ,"translatableFilenames":[]
+}
+
+

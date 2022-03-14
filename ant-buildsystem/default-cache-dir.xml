@@ -1,0 +1,4 @@
+<ivysettings>
+    <properties file="${ivy.settings.dir}/ivysettings.properties" />
+    <caches defaultCacheDir="${ivy-cache-dir}"/>
+</ivysettings>

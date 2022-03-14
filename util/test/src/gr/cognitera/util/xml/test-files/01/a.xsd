@@ -1,0 +1,12 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="foo:a"
+           xmlns:b="foo:b"
+           targetNamespace="foo:a">
+    <xs:import namespace="foo:b" schemaLocation="b.xsd"/>
+    <xs:element name="a" type="AType"/>
+    <xs:complexType name="AType">
+        <xs:sequence>
+            <xs:element name="b" type="b:BType"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

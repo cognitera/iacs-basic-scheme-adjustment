@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="common-jar"
+         basedir="."
+         default="build"
+         xmlns:contrib="http://net.sf.antcontrib"
+         xmlns:ivy="antlib:org.apache.ivy.ant">
+
+    <description>
+        common template for JAR libraries
+    </description>
+
+    <dirname  property="common-jar.basedir" file="${ant.file.common-jar}"/>
+    <import file="${common-jar.basedir}/build-common.xml"/>    
+    <property file="${common-jar.basedir}/build-base-jar.properties"/>
+    <!--   *******************************************************
+           *                                                     *
+           *   JAR-specific targets                              *
+           *                                                     *
+           ******************************************************* -->
+
+    <target name="package"   depends="compile" description="prepare JAR">
+        <mkdir dir="${dist.dir}"/>
+        <!-- You don't need the META-INF/MANIFEST for simple *.jar files
+             which you don't intend to run as applications. Using the [zip]
+             task creates exactly the same archive without the MANIFEST file
+             which results in a stabler binary output artifact -->
+        <zip basedir="${build.classes.dir}"
+             compress="${jar.compress}"
+             destfile="${dist.jar.file}"
+             update="${jar.update}">
+        </zip>
+        <contrib:if>
+            <equals arg1="${create-uberjar}" arg2="true" />
+            <contrib:then>
+                <antcall target="uberjar"/>
+            </contrib:then>
+        </contrib:if>
+    </target>
+
+    <target name="create-all-dependencies-jar">
+        <mkdir dir="${dist.dir}" />
+        <jar jarfile="${dist.dir}/dependencies-all-temporary-file.jar">
+            <zipgroupfileset dir="${lib-static-compile.dir}">
+                <include name="**/*.jar" />
+            </zipgroupfileset>
+            <zipgroupfileset dir="${lib-static-run.dir}">
+                <include name="**/*.jar" />
+            </zipgroupfileset>
+            <!-- you don't have to include ${lib-ivy-compile.dir} since ${lib-ivy-run.dir} is a superset
+                 - this doth work differently than lib-static-compile.dir and lib-static-run.dir (in which
+                   case thou actually have to include both of them) -->
+            <zipgroupfileset dir="${lib-ivy-run.dir}">
+                <include name="**/*.jar" />
+            </zipgroupfileset>
+        </jar>
+    </target>
+
+    <!-- NB: With reference to the "check-whether-a-new-uberjar-is-necessary" target,
+         in principle, we shouldn't have had to implement this contraption.
+         This is only necessary due to what apparently is a bug in the way
+         the [zipgroupfileset] task works inside a [jar] task; This is something
+         we use in the [create-all-dependencies-jar] target. I filed a bug report
+         against Ant here:
+
+            https://bz.apache.org/bugzilla/show_bug.cgi?id=63243
+
+      -->
+    <target name="check-whether-a-new-uberjar-is-necessary">
+        <uptodate property="no-need-to-update-uberjar" targetfile="${uber-jar.file}">
+            <srcfiles dir="${build.classes.dir}"      includes ="**/*"  /> <!-- see 'Note 1' in build-common-war.xml -->
+            <srcfiles dir="${lib-static-compile.dir}" includes ="**/*.*"/>
+            <srcfiles dir="${lib-static-run.dir}"     includes ="**/*.*"/>
+            <srcfiles dir="${lib-ivy-run.dir}"        includes ="**/*.*"/>
+        </uptodate>
+        <contrib:if>
+            <isset property="no-need-to-update-uberjar"/>
+            <contrib:then>
+                <echo message="there is apparently no need to create a new uberjar as neither the sources nor the dependencies have changed"/>
+            </contrib:then>
+            <contrib:else>
+                <echo message="it is necessary to create a new uberjar as either the sources or some of the dependencies have changed"/>
+            </contrib:else>
+        </contrib:if>
+    </target>
+
+    <target name="uberjar" depends="compile, check-whether-a-new-uberjar-is-necessary" unless="no-need-to-update-uberjar"
+            description="create uber jar that bundles all project files alongside with all their runtime dependencies">
+        <mkdir dir="${dist.dir}" />
+        <antcall target="create-all-dependencies-jar"/>
+        <jar jarfile="${uber-jar.file}" basedir="${build.classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${java.classname}" />
+            </manifest>
+            <zipfileset src="${dist.dir}/dependencies-all-temporary-file.jar"
+                        excludes="META-INF/*.SF" />
+        </jar>
+        <delete file="${dist.dir}/dependencies-all-temporary-file.jar" failonerror="true"/>
+    </target>
+
+    <target name="exec" depends="package, build-run-deps" description="run the JAR (if applicable)">
+        <antcall target="fail-if-all-symlinks-in-dir-not-ok">
+            <param name="the.dir" value="${lib-static-run.dir}"/>
+        </antcall>
+        <path id="exec.classpath">
+            <fileset dir="${lib-static-compile.dir}">
+                <include name="*.jar"/>
+            </fileset>
+            <pathelement location="${dist.jar.file}"/>
+            <fileset dir="${lib-static-run.dir}">
+                <include name="*.jar"/>
+            </fileset>
+            <fileset dir="${lib-ivy-run.dir}">
+                <include name="*.jar"/>
+            </fileset>
+        </path>
+        <echo message="ant.java.version=${ant.java.version}"/>
+        <property name="classpath-exec.msg" refid="exec.classpath"/>
+        <echo message="running the app with classpath = ${classpath-exec.msg}"/>
+        <java classname="${java.classname}"
+              failonerror="${java.failonerror}"
+              fork="${java.fork}"
+              resultproperty="javaExitCode">
+            <jvmarg line="${java.jvmarg.line}"/>
+            <arg    line="${java.arg.line}"   />
+            <classpath refid="exec.classpath"/>
+        </java>
+        <fail message="java invocation failure [${javaExitCode}]"
+              status="${javaExitCode}">
+            <condition>
+                <not>
+                    <equals arg1="${javaExitCode}" arg2="0"/>
+                </not>
+            </condition>
+        </fail>
+
+    </target>
+
+    <property name="uber-jar.file" value="${dist.dir}/${artif.name.wt.ver.noext}-uber.jar"/>
+    <property name="install.target" value="${install.effective.dir}/${ant.project.name}.jar"/>
+
+    <target name="install" description="Copy the uber-JAR artifact (${uber-jar.file}) to the configured location (${install.target}). The copy is by default enabled only for JAR projects that create uber jars, the target does nothing in library-type JAR projects">
+        <contrib:if>
+            <equals arg1="${create-uberjar}" arg2="true" />
+            <contrib:then>
+                <antcall target="uberjar"/>
+                <copy file="${uber-jar.file}" tofile="${install.target}"/>
+                <echo message="ant-build-install: ${install.target}"/>
+            </contrib:then>
+        </contrib:if>        
+    </target>
+    
+    
+</project>

@@ -1,0 +1,676 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="common"
+         basedir="."
+         default="build"
+         xmlns:contrib="http://net.sf.antcontrib"
+         xmlns:ivy="antlib:org.apache.ivy.ant">
+
+    <description>
+        common template for all Java components (JAR or WAR)
+    </description>
+    <dirname  property="common.basedir" file="${ant.file.common}"/>
+    
+    <property file="${basedir}/build.properties"/>                   <!-- test or deployment-specific properties that you typically keep out of source control. E.g. for a WAR 
+                                                                          artifact holds the path to the JBoss deployment directory; typically non-existent for JAR artifacts       -->
+    <property file="${basedir}/build-indiv.properties"/>             <!-- project-specific (individual) properties, most notably SW name and version                                -->
+    <property file="${common.basedir}/build-base.properties"/>       <!-- structural (mostly) properties common to all projects using this template                                 -->
+
+
+    <available file="${common.basedir}/build-env.properties" property="isFileAvail" />
+    <fail unless="isFileAvail" message="The following file cannot be found:${line.separator}${line.separator}   ${common.basedir}/../../../build-env.properties${line.separator}This missing file is typically created by a top-level script (written by Jim Overly) using as input the template file [build-env.properties.in] (which typically resides in the same location - at least this is the arrangement at the time of this writing).${line.separator}${line.separator}The missing [build-env.properties] file is sourced from:${line.separator}    ${ant.file.common}${line.separator}... which is in turn imported from:${line.separator}    ${ant.file}.${line.separator}${line.separator}This contraption was put in place in order to link the Ant-based build system with the top-level build machinery and to allow (among other things) the location and version of javac and of the Ivy jar to be configured centrally (they are typically found in an OTS directory)."/>
+    
+    <property file="${common.basedir}/build-env.properties"/>  <!-- environment-related properties (e.g. location of javac executable and 3rd party OTS not fetched by IVY)   -->
+
+    <property name="ots.dir" value="${ivy-filesystem-repo-root}/.."/>
+    
+    <taskdef uri="antlib:org.apache.ivy.ant" resource="org/apache/ivy/ant/antlib.xml" classpath="${ivy.jar.location}"/>
+    <taskdef uri="http://net.sf.antcontrib"  resource="net/sf/antcontrib/antlib.xml"  classpath="${ant-contrib.jar.location}"/>
+
+
+
+    <contrib:if>
+        <isset property="parentProject"/>
+        <contrib:then>
+            <contrib:if>
+                <isset property="environment-has-been-echoed"/>
+                <contrib:then>
+                    <!--echo message="property environment-has-been-echoed has been set, we are not going to print the environment"/-->
+                    <contrib:if>
+                        <equals arg1="${environment-has-been-echoed}" arg2="true"/>
+                        <contrib:then>
+                            <!-- normall; do nothing in this case -->
+                        </contrib:then>
+                        <contrib:else>
+                            <fail message="The property [environment-has-been-echoed], if set, takes only one valid value: 'true'. Yet apparently said property was set but to a different value: '${environment-has-been-echoed}'. Quitting in disgust."/>
+                        </contrib:else>
+                    </contrib:if>
+                </contrib:then>
+                <contrib:else>
+                    <echo message="Visiting project [${ant.project.name}] which is a dependency of [${parentProject}]"/>                    
+                    <property name="environment-has-been-echoed" value="true"/>                    
+                </contrib:else>
+            </contrib:if>            
+        </contrib:then>
+        <contrib:else>
+            <contrib:if>
+                <isset property="environment-has-been-echoed"/>
+                <contrib:then>
+                    <!--echo message="property environment-has-been-echoed has been set, we are not going to print the environment"/-->
+                    <contrib:if>
+                        <equals arg1="${environment-has-been-echoed}" arg2="true"/>
+                        <contrib:then>
+                            <!-- normall; do nothing in this case -->
+                        </contrib:then>
+                        <contrib:else>
+                            <fail message="The property [environment-has-been-echoed], if set, takes only one valid value: 'true'. Yet apparently said property was set but to a different value: '${environment-has-been-echoed}'. Quitting in disgust."/>
+                        </contrib:else>
+                    </contrib:if>
+                </contrib:then>
+                <contrib:else>
+                    
+                    <echo message="property environment-has-been-echoed is NOT set, we are going to print the environment for the first time"/>
+                    <echo message="+---------------------------------------------------------------+"/>
+                    <echo message="| Building Project Information START                            |"/>
+                    <echo message="+---------------------------------------------------------------+"/>
+                    <echo message="basedir            : ${basedir}"/>            
+                    <echo message="ant.project.name   : ${ant.project.name}"/>
+                    <echo message="ant.file           : ${ant.file}"/>
+                    <echo message="ant.version        : ${ant.version}"/>
+                    <echo message="ant.core.lib       : ${ant.core.lib}"/>            
+                    <echo message="+---------------------------------------------------------------+"/>
+                    <echo message="| Building Project Information END                              |"/>
+                    <echo message="+---------------------------------------------------------------+"/>
+                    <echo message="${line.separator}${line.separator}"/>
+                    <echo message="+--------------------------------------------------------------------------------------------+"/>
+                    <echo message="| environment configuration START                                                            |"/>
+                    <echo message="+--------------------------------------------------------------------------------------------+"/>
+                    <echo message="I - following configurations read from file: ${common.basedir}/build-env.properties"/>
+                    <echo message=""/>
+                    <echo message="javac.executable         : ${javac.executable}"/>
+                    <echo message="findbugs.home            : ${findbugs.home}   "/>
+                    <echo message="install.dir              : ${install.dir}     "/>
+                    <echo message="install.subdir           : ${install.subdir}  "/>
+                    <echo message="install.effective.dir    : ${install.effective.dir}"/>
+                    <echo message="ivy-filesystem-repo-root : ${ivy-filesystem-repo-root}"/>
+                    <echo message="ivy.jar.location         : ${ivy.jar.location}"/>
+                    <echo message="ant-contrib.jar.location : ${ant-contrib.jar.location}"/>
+                    <echo message="ant-tasks.jar.location   : ${ant-tasks.jar.location}"/>
+                    <echo message="jconnect.jar.location    : ${jconnect.jar.location}"/>
+                    <echo message=""/>
+                    <echo message="II - following configuration computed from above properties (computation logic defined in ${ant.file.common}):"/>
+                    <echo message=""/>
+                    <echo message="ots.dir                  : ${ots.dir}"/>
+                    <echo message="III - following configuration values hardcoded in files present in ${common.basedir}:"/>
+                    <property file="${common.basedir}/ivysettings.properties"/>
+                    <echo message="Ivy repository cache     : ${ivy-cache-dir}  - read from property 'ivy-cache-dir' in file 'ivysettings.properties'"/>
+                    <echo message="+--------------------------------------------------------------------------------------------+"/>
+                    <echo message="| environment configuration END                                                              |"/>
+                    <echo message="+--------------------------------------------------------------------------------------------+"/>
+                    <property name="environment-has-been-echoed" value="true"/>                    
+                </contrib:else>
+            </contrib:if>
+        </contrib:else>
+    </contrib:if>
+
+
+            
+
+    <!-- /~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\
+         |  F O U R    M A I N    C L A S S P A T H S   D E F I N I T I O N                             |
+         |                                                                                              |
+         |  * compile.classpath: used for compiling the sources (including JUnit test sources)          |
+         |  * run.classpath: this is the run-time classpath.                                            |
+         |        + For a JAR artifact corresponds to the classpath used for running the JAR            |
+         |          (if applicable, and only if you wish to use Ant's <java> task to run it - as        |
+         |          opposed to directly invoking java on the command line). In the most common case of  |
+         |          a library (not runnable) JAR, this classpath is not really applicable.              |
+         |        + For a WAR artifact corresponds to the collection of JARs that will be copied        |
+         |          over (during packaging) in the WEB-INF/lib directory of the resultant WAR           |
+         |        The run.classpath is *not* defined to be a superset of the compile.classpath          |
+         |        but will effectively be one when the ivy:retrieve tasks are executed (see Note-001)   |
+         |  * test.classpath: this is the classpath used for running the (JUnit) tests.                 |
+         |        The test.classpath is a superset of the run.classpath                                 |
+         |  * buildsystem.classpath: this is the classpath used by some of the more exotic features     |
+         |        of the build system itself, i.e. Ant tasks like findbugs, pmd and check-style         |
+         |                                                                                              |
+         | For more information see Note-001 at the end of this file.                                   |
+         \~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~/
+      -->
+
+    <path id = "compile.classpath">
+      <fileset dir="${lib-static-compile.dir}">
+        <include name ="*.jar"/>
+      </fileset>
+      <fileset dir="${lib-ivy-compile.dir}">
+        <include name ="*.jar"/>
+      </fileset>
+    </path>
+
+    <path id="run.classpath">
+        <fileset dir="${lib-static-compile.dir}">
+            <include name ="*.jar"/>
+        </fileset>
+        <pathelement location="${build.classes.dir}"/>
+        <fileset dir="${lib-static-run.dir}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib-ivy-run.dir}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="test.classpath">
+        <path refid="run.classpath"/>
+        <fileset dir="${lib-static-test.dir}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib-ivy-test.dir}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="buildsystem.classpath">
+        <fileset dir="${lib-ivy-buildsystem.dir}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name        = "ivy-clean-cache"
+            depends     = "configure-ivy-settings"
+            description = "clean Ivy cache">            
+        <ivy:cleancache/>
+    </target>
+
+    <target name="all"
+            depends="build, test, check"
+            description="Build, test, document and check"/>
+
+    <target name="configure-ivy-settings">
+        <contrib:if>
+            <isset property="enable-ibiblio"/>
+            <contrib:then>
+                <contrib:if>
+                    <equals arg1="${enable-ibiblio}" arg2="true"/>
+                    <contrib:then>
+                        <ivy:settings file="${common.basedir}/ivysettings-local-then-ibiblio.xml"/>
+                        <echo message="${line.separator}${line.separator}${line.separator}NB: ibiblio is used for this build${line.separator}${line.separator}"/> 
+                    </contrib:then>
+                    <contrib:else>
+                        <fail message="If the [enable-ibiblio] property is set, only the value 'true' is allowed, yet the value ${enable-ibiblio} was found"/>
+                    </contrib:else>
+                </contrib:if>                    
+            </contrib:then>
+            <contrib:else>
+                <ivy:settings file="${common.basedir}/ivysettings-only-local.xml"/>
+            </contrib:else>
+        </contrib:if>
+    </target>
+
+    <target name="build-compile-deps">
+        <echo message="${line.separator}${line.separator}building compile-time dependencies...${line.separator}${line.separator}"/>
+        <echo message="VALUE OF ENVIRONMENT-HAS-BEEN-ECHOED is: ${environment-has-been-echoed}"/>
+        <contrib:foreach target="build-linked-project" inheritall="true" param="file">
+            <path>
+                <fileset dir="${lib-static-compile.dir}" casesensitive="yes">
+                    <include name="*.jar"/>
+                </fileset>
+            </path>
+      </contrib:foreach>
+    </target>
+
+    <target name="build-run-deps">
+        <echo message="${line.separator}${line.separator}building run-time dependencies...${line.separator}${line.separator}"/>
+        <contrib:foreach target="build-linked-project" inheritall="true" param="file">
+            <path>
+                <fileset dir="${lib-static-run.dir}" casesensitive="yes">
+                    <include name="*.jar"/>
+                </fileset>
+            </path>
+      </contrib:foreach>
+    </target>
+    
+    <target name="build-linked-project">
+        <taskdef name="call-target-on-linked-project" classname="edu.harvard.cda.anttasks.CallTargetOnLinkedProject" classpath="${ant-tasks.jar.location}"/>
+
+
+
+        <contrib:if>
+            <isset property="parentProject"/>
+            <contrib:then>
+                <call-target-on-linked-project parentProject="${parentProject} ~~> ${ant.project.name}" jarFilePath="${file}" target="package"/>
+            </contrib:then>
+            <contrib:else>
+                <call-target-on-linked-project parentProject="${ant.project.name}" jarFilePath="${file}" target="package"/>
+            </contrib:else>
+        </contrib:if>            
+    </target>
+
+    <target name="clean-deps">
+        <echo message="${line.separator}${line.separator}building dependencies, new implementation ${line.separator}${line.separator}"/>
+        <contrib:foreach target="clean-linked-project" inheritall="true" param="file">
+            <path>
+                <fileset dir="${lib-static-compile.dir}" casesensitive="yes">
+                    <include name="*.jar"/>
+                </fileset>
+            </path>
+        </contrib:foreach>
+        <contrib:foreach target="clean-linked-project" param="file">
+            <path>
+                <fileset dir="${lib-static-run.dir}" casesensitive="yes">
+                    <include name="*.jar"/>
+                </fileset>
+            </path>
+      </contrib:foreach>        
+    </target>
+
+    <target name="clean-linked-project">
+        <taskdef name="call-target-on-linked-project" classname="edu.harvard.cda.anttasks.CallTargetOnLinkedProject" classpath="${ant-tasks.jar.location}"/>
+        <contrib:if>
+            <isset property="parentProject"/>
+            <contrib:then>
+                <call-target-on-linked-project parentProject="${parentProject} ~~> ${ant.project.name}" jarFilePath="${file}" target="cclean"/>
+            </contrib:then>
+            <contrib:else>
+                <call-target-on-linked-project parentProject="${ant.project.name}" jarFilePath="${file}" target="cclean"/>
+            </contrib:else>
+        </contrib:if>            
+    </target>
+    
+    <target name="retrieve-ivy-deps-compiletime-runtime-testtime"
+            description="resolve and retrieve dependencies with ivy"
+            depends="configure-ivy-settings">
+        <contrib:outofdate>
+            <deletetargets all="true"/>
+            <sourcefiles>
+                <pathelement path="${ivy.xml.file}"/>
+            </sourcefiles>
+            <targetfiles>
+                <pathelement path="${ivy.xml.control.file}"/>
+            </targetfiles>
+            <sequential>
+                <ivy:resolve file="${ivy.xml.file}"/>
+                <ivy:report todir='${ivy-reports.dir}' graph='false' xml='false'/>
+                <!-- type="jar" means only jar files, not javadoc or sources; "bundle" is used because of this: http://stackoverflow.com/a/23804543/274677 -->
+                <ivy:retrieve conf="compile-time"
+                              pattern="${lib-ivy-compile.dir}/[artifact]-[revision](-[classifier]).[ext]"
+                              sync="true"
+                              type="jar, bundle"/>
+                <ivy:retrieve conf="run-time"
+                              pattern="${lib-ivy-run.dir}/[artifact]-[revision](-[classifier]).[ext]"
+                              sync="true"
+                              type="jar, bundle"/>
+                <ivy:retrieve conf="test-time"
+                              pattern="${lib-ivy-test.dir}/[artifact]-[revision](-[classifier]).[ext]"
+                              sync="true"
+                              type="jar, bundle"/> 
+                <touch file="${ivy.xml.control.file}"/>
+            </sequential>
+        </contrib:outofdate>
+        <!-- go ahead and create the IVY directories in the off-chance that nothing was configured to be retrieved via Ivy-->
+        <mkdir dir="${lib-ivy-compile.dir}"/>
+        <mkdir dir="${lib-ivy-run.dir}"/>         
+        <mkdir dir="${lib-ivy-test.dir}"/>
+    </target>
+
+    <target name="init">
+        <tstamp/>
+        <mkdir dir="${lib-ivy-compile.dir}"/>
+        <mkdir dir="${lib-ivy-run.dir}"/>        
+        <mkdir dir="${lib-ivy-test.dir}"/>
+        <mkdir dir="${build.dir}"/>
+    </target>
+
+
+    <target name="compile"
+            depends="init, retrieve-ivy-deps-compiletime-runtime-testtime, build-compile-deps, compile-local"
+            description="Compile java sources"/>
+
+    <target name="pre-compile-local-hook">
+        <echo message="empty base implementation"/>
+    </target>
+    
+    
+    <target name        = "compile-local"
+            depends     = "init, pre-compile-local-hook"
+            description = "only compile local Java sources; no static dependencies and don't retrieve using Ivy">
+        <antcall target="fail-if-all-symlinks-in-dir-not-ok">
+            <param name="the.dir" value="${lib-static-compile.dir}"/>
+        </antcall>
+        <echo message="compiling with classpath: ${toString:compile.classpath}"/>
+        <mkdir dir="${build.classes.dir}"/>        
+        <javac compiler="${javac.compiler}"
+               srcdir="${java.dir}"
+               destdir="${build.classes.dir}"
+               source="${javac.source}"
+               target="${javac.target}"
+               debug="${javac.debug}"
+               verbose="${javac.verbose}"
+               deprecation="${javac.deprec}"
+               includeAntRuntime="false"
+               nowarn="${javac.nowarn}"
+               fork="${javac.fork}"
+               executable="${javac.executable}"
+               >
+            <include name="**/*.java"/>
+            <classpath refid="compile.classpath"/>
+            <compilerarg line="-encoding utf-8 -Xlint:unchecked"/> 
+        </javac>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${java.dir}">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="build" depends="package, sources-and-javadoc"  description="prepare all artifacts (main package - JAR or WAR - , sources and javadoc)"/>
+
+    <target name="sources-and-javadoc"   depends="docs" description="prepare sources and javadoc artifacts" >
+        <mkdir dir="${dist.dir}"/>
+        <jar basedir="${java.dir}"
+             compress="${jar.compress}"
+             destfile="${dist.sources-jar.file}"
+             filesetmanifest="merge"
+             index="${jar.index}"
+             update="${jar.update}">
+        </jar>
+        <jar basedir="${build.javadoc.dir}"
+             compress="${jar.compress}"
+             destfile="${dist.javadoc-jar.file}"
+             filesetmanifest="merge"
+             index="${jar.index}"
+             update="${jar.update}">
+        </jar>        
+    </target>
+
+
+    <target name="clean-hook">
+        <echo message="default empty implementation"/>
+    </target>
+
+    <target name="clean-except-ivy">
+        <delete dir="${build.dir}" failonerror="true"              />
+        <delete dir="${dist.dir}"  failonerror="true"              />
+        <delete>
+            <fileset dir="${basedir}" includes="build.xml.*.log"   />
+        </delete>        
+    </target>
+    <target name="clean-ivy">
+        <delete dir ="${lib-ivy-buildsystem.dir}" failonerror="true"/>        
+        <delete dir ="${lib-ivy-compile.dir}"     failonerror="true"/>
+        <delete dir ="${lib-ivy-run.dir}"         failonerror="true"/>
+        <delete dir ="${lib-ivy-test.dir}"        failonerror="true"/>
+        <delete file="${ivy.xml.control.file}"    failonerror="true"/>
+        <delete file="${ivy-bs.xml.control.file}" failonerror="true"/>
+        <delete dir ="${ivy-reports.dir}"/>
+        <antcall target="clean-hook"/>
+    </target>
+    <target name="clean" depends="clean-except-ivy, clean-ivy" description="clean"/>
+
+
+    <target name="cclean" depends="clean, clean-deps" description="clean dependencies too" />
+
+    <target name="test-compile"
+            depends="compile, build-run-deps"
+            description="Compile the unit tests">
+        <antcall target="fail-if-all-symlinks-in-dir-not-ok">
+            <param name="the.dir" value="${lib-static-test.dir}"/>
+        </antcall>            
+        <mkdir dir="${build.testclasses.dir}"/>
+        <mkdir dir="${build.jureport.dir}"/>
+        <echo message="compiling the JUnit test cases with classpath: ${toString:test.classpath}"/>                
+        <javac classpathref="test.classpath"
+               debug="${javac.debug}"
+               destdir="${build.testclasses.dir}"
+               includeAntRuntime="false"
+               srcdir="${java.test.dir}"/>
+        <copy includeEmptyDirs="false" todir="${build.testclasses.dir}">
+            <fileset dir="${test.dir}/src">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="test"
+            depends="test-compile"
+            description="Run the unit tests (using JUnit or other specific tests)">
+        <path id="test-run.classpath">
+            <path refid="test.classpath"/>
+            <pathelement location="${build.testclasses.dir}"/>
+        </path>
+        <echo message="running the JUnit tests with classpath: ${toString:test-run.classpath}"/>        
+        <echo message="target friendly name is: ${target-friendly-name}"/>
+        <junit fork="true"
+               dir="${basedir}"
+               printsummary="${junit.summary}"
+               showoutput="${junit.output}">
+            <!-- for the (optional) functionality to which ${target-friendly-name} may be put to use, see: http://stackoverflow.com/a/27386564/274677 -->
+            <sysproperty key="target-friendly-name" value="${target-friendly-name}"/>       
+            <classpath refid="test-run.classpath"/>
+            <batchtest haltonfailure="${junit.halt}" todir="${build.jureport.dir}">
+                <fileset dir="${build.testclasses.dir}" includes="**/*Test.class"/>
+            </batchtest>
+            <!--formatter type="plain" usefile="false"/-->
+            <formatter type="xml"/>
+        </junit>
+
+        <junitreport todir="${build.jureport.dir}">
+            <fileset dir="${build.jureport.dir}" includes="TEST-*.xml"/>
+            <report todir="${build.jureport.dir}"/>
+        </junitreport>
+    </target>
+
+    <target name="docs"
+            depends="init">
+        <mkdir dir="${build.javadoc.dir}"/>
+        
+        <javadoc access="${javadoc.access}"
+                 destdir="${build.javadoc.dir}"
+                 failonerror="${javadoc.fail}"
+                 packagenames="${javadoc.packages}"
+                 source="${javac.source}"
+                 sourcepath="${java.dir}">
+            <classpath refid="compile.classpath"/>
+            <link href="http://docs.oracle.com/javase/7/docs/api/"/>
+        </javadoc>
+    </target>
+
+    <target depends="build, check-style, findbugs, pmd" name="check"/>
+
+
+    <target name="fetch-buildsystem-deps" depends="configure-ivy-settings">
+        <contrib:outofdate>
+            <deletetargets all="true"/>
+            <sourcefiles>
+                <pathelement path="${ivy-bs.xml.file}"/>
+            </sourcefiles>
+            <targetfiles>
+                <pathelement path="${ivy-bs.xml.control.file}"/>
+            </targetfiles>
+            <sequential>
+                <ivy:resolve file="${ivy-bs.xml.file}"/>
+                <ivy:report todir='${ivy-reports.dir}' graph='false' xml='false'/>                
+                <ivy:retrieve conf="build-system"
+                              pattern="${lib-ivy-buildsystem.dir}/[artifact]-[revision](-[classifier]).[ext]"
+                              sync="true"
+                              type="jar, bundle"/>
+                <touch file="${ivy-bs.xml.control.file}"/>                
+            </sequential>
+        </contrib:outofdate>
+        <!-- go ahead and create the IVY directory in the off-chance that nothing was configured to be retrieved via Ivy-->
+        <mkdir dir="${lib-ivy-buildsystem.dir}"/> 
+    </target>
+    
+    <target name="check-style"
+            depends="fetch-buildsystem-deps, build"
+            description="Check the sources for style violations (and report them)">
+        <mkdir dir="${build.csreport.dir}"/>
+        <taskdef resource="checkstyletask.properties">
+            <classpath refid="buildsystem.classpath"/>
+        </taskdef>
+        
+        <checkstyle config="${checkstyle.config}" failonviolation="${checkstyle.fail}">
+            <classpath>
+                <path refid="compile.classpath"/>
+                <pathelement location="${build.classes.dir}"/>
+            </classpath>
+            <fileset dir="${java.dir}" includes="**/*.java"/>
+            <formatter tofile="${build.csreport.dir}/csreport.xml" type="xml"/>
+        </checkstyle>
+        
+        <xslt basedir="${build.csreport.dir}"
+              destdir="${build.csreport.dir}"
+              includes="*.xml"
+              style="${checkstyle.style}">
+            <param expression="${build.csreport.dir}" name="output.dir"/>
+            <param expression="${basedir}/${java.dir}/" name="source.dir"/>
+        </xslt>
+    </target>
+    
+    
+    <target name="findbugs" depends="fetch-buildsystem-deps, build" description="run the Findbugs static code analyzer; report is made available in [build/findbugs/findbug.html]">
+        <taskdef classname="edu.umd.cs.findbugs.anttask.FindBugsTask"
+                 name="findbugs">
+            <classpath refid="buildsystem.classpath"/>
+        </taskdef>
+        <mkdir dir="${findbugs.outputDir}"/>
+        <property name="findbugs.exclude.file" value="${basedir}/fb-exclude-filter.xml"/>
+        <contrib:if>
+            <available file="${findbugs.exclude.file}"/>
+            <contrib:then>
+                <echo message="Findbugs exclude filter file: [${findbugs.exclude.file}] found."/>
+            </contrib:then>
+            <contrib:else>
+                <echo message="Findbugs exclude filter file: [${findbugs.exclude.file}] is not present - only using annotation-based suppressors"/>
+            </contrib:else>
+        </contrib:if>
+            
+        <findbugs effort="${findbugs.effort}"
+                  home="${findbugs.home}"
+                  output="${findbugs.output}"
+                  outputFile="${findbugs.outputDir}/findbug.html"
+                  quietErrors="${findbugs.quietErrors}"
+                  reportLevel="${findbugs.reportLevel}"
+                  excludeFilter="${basedir}/fb-exclude-filter.xml"
+                  >
+            <!-- NB: the setExitCode attribute is very handy here, but is supported only in 3.0.1 which is not in Maven yet, see:
+                 https://sourceforge.net/p/findbugs/bugs/1318/
+            -->
+            <auxClasspath>
+                <path refid="compile.classpath"/>
+            </auxClasspath>
+            <sourcePath path="${java.dir}"/>
+            <class location="${build.classes.dir}"/>
+        </findbugs>
+
+        <property name="findbugs_report.absolute.path" location="${basedir}/build/findbugs/findbug.html"/>
+        <echo>${line.separator}${line.separator}Findbugs report is available at: ${findbugs_report.absolute.path}${line.separator}${line.separator}${line.separator}</echo>
+    </target>
+    <target name="vspace">
+        <echo message="${line.separator}${line.separator}${line.separator}${line.separator}"/>
+    </target>
+    <target name="pmd" depends="init, fetch-buildsystem-deps" description="run the PMD static code analyzer; report is made available in [build/pmd_report.html]">
+        <taskdef classname="net.sourceforge.pmd.ant.PMDTask" name="pmd">
+            <classpath refid="buildsystem.classpath"/>            
+        </taskdef>
+        <property name="pmd.rule.violations.num" value="0"/>
+        <pmd failonerror="${pmd.failonerror}"
+             failonruleviolation="${pmd.failonruleviolation}"
+             failuresPropertyName="pmd.rule.violations.num"
+             rulesetfiles="${pmd.rulesetfiles}"
+             shortFilenames="${pmd.shortFilenames}"
+             suppressMarker="${pmd.suppressMarker}">
+            <sourceLanguage name="java" version="${javac.source}"/>
+            <!--
+                <ruleset>rulesets/java/design.xml</ruleset>
+                <ruleset>java-basic</ruleset> 
+            -->
+            <!-- the latter of the above two examples shows alternative way of indicating ruleset
+                 translation occurs in RuleSetReferenceId.java#resolveBuiltInRuleset (for v5.2.2) -->
+            <formatter toFile="${pmd.formatter.toFile}" type="${pmd.formatter.type}">
+                <param name="linkPrefix" value="http://pmd.sourceforge.net/xref/"/>
+            </formatter>
+            <fileset dir="${java.dir}">
+                <include name="**/*.java"/>
+            </fileset>
+        </pmd>
+        <antcall target="vspace"/>
+        <property name="pmd_report.absolute.path" location="${basedir}/build/pmd_report.html"/>
+        <echo>PMD detected a total of ${pmd.rule.violations.num} rule violations.${line.separator}</echo>
+        <echo>Report is available at: ${pmd_report.absolute.path}${line.separator}${line.separator}${line.separator}</echo>
+        <antcall target="vspace"/>
+    </target>
+
+    <target name="uninstall" description="Remove the main artifact (${dist.jar.file}) from the configured installation location (${install.target})">
+        <delete file="${install.target}"/> 
+    </target>
+    
+
+    <!-- /~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\
+         |                                                                                              |
+         |  U T I L I T I E S                                                                           |
+         |                                                                                              |
+         \~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~/
+    -->
+
+    <target name="panic-if-symlink-is-dangling">
+        <taskdef name="file-detector" classname="edu.harvard.cda.anttasks.FileTypeDetector" classpath="${ant-tasks.jar.location}"/>
+        <file-detector filePath="${symlink.file}" retProperty="status"/>
+        <echo message="the file-pronouncer task for file [${symlink.file}] returned: [${status}]"/>
+        <contrib:switch value="${status}">
+            <case value="symlink-to-regular">
+                <echo message="OK"/>
+            </case>
+            <case value="regular">
+                <contrib:if>
+                    <isset property="disable-warning-about-regular-files-in-lib-static-compile"/>
+                    <contrib:then>
+                    </contrib:then>
+                    <contrib:else>
+                        <echo level="error" message="${line.separator}${line.separator}${line.separator}${line.separator}A regular file (${symlink.file}) was detected in a directory where symlinks were expected. Yoda asks: &quot;that what you want this is, sure you are?&quot;. Yoda goes on to add:&quot;Necessarily an erroneous condition, this is not. Error color, simply to draw your attention I use.&quot;${line.separator}${line.separator}${line.separator}"/>
+                    </contrib:else>
+                </contrib:if>
+            </case>            
+            <default>
+                <fail message="file [${symlink.file}] found to be in state: [${status}]; at this stage unexpected this is; investigate you must."/>
+            </default>
+        </contrib:switch>
+    </target>
+
+    <target name="fail-if-all-symlinks-in-dir-not-ok">
+        <contrib:foreach target="panic-if-symlink-is-dangling" inheritall="true" param="symlink.file">
+            <path>
+                <fileset dir="${the.dir}" casesensitive="yes">
+                    <include name="*.jar"/>
+                </fileset>
+            </path>
+      </contrib:foreach>
+    </target>
+
+    <macrodef name="fail-if-file-not-exists">
+        <attribute name="file"/>
+        <attribute name="message"/>
+        <sequential>
+            <fail message="@{message}">
+                <condition>
+                    <not>
+                        <available file="@{file}" />
+                    </not>
+                </condition>
+            </fail>
+        </sequential>
+    </macrodef>
+    
+</project>
+
+
+    <!-- /~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\
+         |                                                                                              |
+         |  N O T E S                                                                                   |
+         |                                                                                              |
+         \~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~/
+    -->
+
+    <!-- Note-001 (providing some thoughts behind the definition of the four main classpaths)
+
+         TBP
+    -->

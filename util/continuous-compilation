@@ -1,0 +1,1 @@
+when-changed $(find . -iname \*.java) -c ant compile-local | grcat grc.conf

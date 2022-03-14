@@ -1,0 +1,6 @@
+<ivysettings>
+    <include file="${ivy.settings.dir}/resolver-fs-local.xml"/>
+    <include file="${ivy.settings.dir}/default-cache-dir.xml"/>
+    <settings defaultResolver="fs-local" />
+</ivysettings>
+
