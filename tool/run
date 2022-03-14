@@ -22,13 +22,7 @@ if ([ -h "${WHERE_I_LIVE}" ]) then
 #
 ##############################################################
 
-CLASSPATH=\
-:$(echo ${WHERE_I_LIVE}/lib-ivy-compile/*.jar      | tr ' ' ':')\
-:$(echo ${WHERE_I_LIVE}/lib-ivy-run/*.jar          | tr ' ' ':')\
-:$(echo ${WHERE_I_LIVE}/lib-ivy-test/*.jar         | tr ' ' ':')\
-:$(echo ${WHERE_I_LIVE}/lib-static-compile/*.jar   | tr ' ' ':')\
-:$(echo ${WHERE_I_LIVE}/lib-static-test/*.jar      | tr ' ' ':')\
-:$(echo ${WHERE_I_LIVE}/dist/*.jar                 | tr ' ' ':')
+CLASSPATH=$(echo ${WHERE_I_LIVE}/dist/*.jar   | tr ' ' ':')
 # echo "using CLASSPATH=$CLASSPATH"
 java -Dlog4j.configuration=file:"${WHERE_I_LIVE}"/log4j.properties -classpath "${CLASSPATH}" gr.cognitera.iacs.basic_scheme_adjustment.Adjust $@
 

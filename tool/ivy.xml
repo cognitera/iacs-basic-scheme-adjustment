@@ -11,9 +11,12 @@
     <dependencies>
         <!-- compile time dependencies - no transitive deps -->
         <dependency org="com.beust"              name="jcommander"          rev="1.30"          conf="compile-time->master"/>
+        <dependency org="com.google.guava"       name="guava"               rev="20.0"          conf="compile-time->master"/>
         <dependency org="junit"                  name="junit"               rev="4.12"          conf="compile-time->master"/>
         <dependency org="log4j"                  name="log4j"               rev="1.2.17"        conf="compile-time->master"/>
-        <dependency org="org.apache.httpcomponents" name="httpcore"         rev="4.4.5"         conf="compile-time->master"/>        
+        <dependency org="org.apache.httpcomponents" name="httpcore"         rev="4.4.5"         conf="compile-time->master"/>
+        <dependency org="commons-dbutils"           name="commons-dbutils"     rev="1.6"           conf="compile-time->master"/>
+        <dependency org="org.antlr"                 name="ST4"                 rev="4.0.8"         conf="compile-time->master"/>        
         <!-- run-time dependencies                                              -->
         <!-- we need the below during runtime, along with their transitive deps -->
         <dependency org="com.beust"              name="jcommander"          rev="1.30"          conf="run-time->default"/>
@@ -24,7 +27,9 @@
         <dependency org="org.apache.httpcomponents" name="httpclient"       rev="4.5.2"         conf="run-time->default"/>
         <dependency org="commons-io"             name="commons-io"          rev="2.5"           conf="run-time->default"/>        
         <dependency org="log4j"                  name="log4j"               rev="1.2.17"        conf="run-time->default"/>
-        <dependency org="com.google.code.gson"   name="gson"                rev="2.8.0"         conf="run-time->default"/>        
+        <dependency org="com.google.code.gson"   name="gson"                rev="2.8.0"         conf="run-time->default"/>
+        <dependency org="commons-dbcp"           name="commons-dbcp"        rev="1.4"           conf="run-time->default"/>
+        <dependency org="commons-dbutils"           name="commons-dbutils"     rev="1.6"           conf="run-time->default"/>        
         <!-- test-time dependencies                                             -->
         <!-- we need the below during testing, along with their transitive deps -->
         <dependency org="junit"                  name="junit"               rev="4.12"          conf="test-time->default"/>
