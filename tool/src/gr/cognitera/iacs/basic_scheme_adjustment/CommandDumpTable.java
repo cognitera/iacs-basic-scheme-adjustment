@@ -27,12 +27,13 @@ public class CommandDumpTable {
         try {
             final String json = Files.asCharSource(new File(configFPath), StandardCharsets.UTF_8).read();
             final DBConfig dbConfig = GsonHelper.fromJson(json, DBConfig.class);
-            final String ip = "192.168.2.15";
-            final int port = 1521;
-            final String db = "ORCL";
-            final String user = "system";
-            final String pwd = "285628kL";
-            final DataSource ds = OracleDataSourceUtil.getDataSource(ip, port, db, user, pwd, 1, 0);
+            final DataSource ds = OracleDataSourceUtil.getDataSource(dbConfig.ip
+                                                                     , dbConfig.port
+                                                                     , dbConfig.dbname
+                                                                     , dbConfig.username
+                                                                     , dbConfig.password
+                                                                     , 1
+                                                                     , 0);
             final Connection conn = ds.getConnection();
             DBRightsTable.doTran(conn, "foo");
         } catch (IOException e) {
