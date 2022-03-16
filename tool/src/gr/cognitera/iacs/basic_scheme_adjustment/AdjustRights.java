@@ -83,13 +83,18 @@ public class AdjustRights {
                                                        , rightType
                                                        , RightValueSelector.ABOVE
                                                        , rgValConfig.valueFor(rightType));
-        final int DISCOUNT_SCALE = 2;
-        final BigDecimal minimumHorizontalDiscount = shortFall.divide(totalAbove
-                                                                      , DISCOUNT_SCALE
-                                                                      , RoundingMode.CEILING);
-        Assert.assertEquals(DISCOUNT_SCALE, minimumHorizontalDiscount.scale());
-        System.out.printf("minimum horizontal discount calculated as: %.2f\n", minimumHorizontalDiscount);
-        
+        if (totalAbove.equals(BigDecimal.ZERO)) {
+            System.out.printf("no discount is possible because no rights have a unit value greater than the regional target [%.5f]\n", rgValConfig.valueFor(rightType));
+        } else {
+            final int DISCOUNT_SCALE = 2;
+            final BigDecimal minimumHorizontalDiscount = shortFall.divide(totalAbove
+                                                                          , DISCOUNT_SCALE
+                                                                          , RoundingMode.CEILING);
+            Assert.assertTrue(minimumHorizontalDiscount.compareTo(BigDecimal.ZERO) == 1);
+            Assert.assertTrue(minimumHorizontalDiscount.compareTo(new BigDecimal(100)) <= 0);
+            Assert.assertEquals(DISCOUNT_SCALE, minimumHorizontalDiscount.scale());
+            System.out.printf("minimum horizontal discount calculated as: %.2f\n", minimumHorizontalDiscount);
+        }
     }    
 
 
