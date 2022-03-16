@@ -2,7 +2,7 @@ package gr.cognitera.iacs.basic_scheme_adjustment;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.List;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -35,7 +35,8 @@ public class CommandDumpTable {
                                                                      , 1
                                                                      , 0);
             final Connection conn = ds.getConnection();
-            DBRightsTable.doTran(conn, "foo");
+            final List<Right> rights = DBRightsTable.readAllRights(conn);
+            System.out.printf("%d rights read\n", rights.size());
         } catch (IOException e) {
             Assert.fail(String.format("DB configuration file [%s] not found", configFPath));
         } catch (SQLException e) {

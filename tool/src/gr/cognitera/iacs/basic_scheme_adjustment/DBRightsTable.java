@@ -75,8 +75,14 @@ public class DBRightsTable {
         logger = Logger.getLogger(klass);
     }
 
+    private static Map<String, CustomFieldReader<?>> prepareFieldOverrides() {
+        final Map<String, CustomFieldReader<?>> rv = new LinkedHashMap<>();
+        Assert.assertNull(rv.put("source", new RightSourceFieldReader("source")));
+        Assert.assertNull(rv.put("type"  , new RightTypeFieldReader("type")));
+        return rv;
+    }
 
-    public static List<RightsRetrieve> doTran(final Connection conn, final String taxNumber ) throws SQLException {
+    public static List<Right> readAllRights(final Connection conn ) throws SQLException {
         final Class klass = DBRightsTable.class; 
         PreparedStatement ps   = null;
         ResultSet         rs   = null;
@@ -88,15 +94,30 @@ public class DBRightsTable {
             //            st.add("appId"     , appId);
             final String SQL = st.render();
             logger.debug(String.format("SQL query read as [%s]\n", SQL));*/
-            final String SQL = "SELECT x.*,x.ROWID FROM GAEE2020.EDETEDEAEEBPE x";
+            final String SQL = "SELECT"
+                +" x.ID               AS id, "
+                +" x.BPE_ID           AS internal_id, "
+                +" x.BPE_GROUP_TYPE   AS source, "
+                +" x.BPE_TYPE         AS type, "
+                +" x.BPEUP            AS unit_value "
+                +" FROM GAEE2020.EDETEDEAEEBPE x";
             ps = conn.prepareStatement(SQL);
             //            ps.setInt(1, appId);
             rs = ps.executeQuery();
-            List<RightsRetrieve> rv = new ArrayList<>();
+            List<Right> rv = new ArrayList<>();
             //            final Map<String, CustomFieldReader<?>> customFieldReaders = new LinkedHashMap<>();
             int i = 0;
+            final Map<String, CustomFieldReader<?>> fieldOverrides = prepareFieldOverrides();
             while (rs.next()) {
                 System.out.printf(".");
+                final Right right = ResultSetHelper.readObject(logger
+                                                               , rs
+                                                               , Right.class
+                                                               , true
+                                                               , fieldOverrides
+                                                               , (Map<String, String>) null);
+
+
                 i++;
             }
             System.out.printf("\n\nWent through %d rows\n", i);
