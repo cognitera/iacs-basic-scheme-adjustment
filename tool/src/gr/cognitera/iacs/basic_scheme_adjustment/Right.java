@@ -3,6 +3,8 @@ package gr.cognitera.iacs.basic_scheme_adjustment;
 import java.util.List;
 import java.util.ArrayList;
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 
 
 import com.google.common.base.MoreObjects;
@@ -15,6 +17,7 @@ public class Right {
 
     public RightSource source;
     public RightType type;
+    public BigDecimal quantity;
     public BigDecimal unit_value;
 
     @Override
@@ -29,17 +32,24 @@ public class Right {
                  final long internal_id,
                  final RightSource source,
                  final RightType type,
+                 final BigDecimal quantity,
                  final BigDecimal unit_value
                  ) {
         this.id = id;
         this.internal_id = internal_id;
         this.source = source;
         this.type = type;
+        this.quantity = quantity;
         this.unit_value = unit_value;
     }
 
     public Right(final Right x) {
-        this(x.id, x.internal_id, x.source, x.type, x.unit_value);
+        this(x.id
+             , x.internal_id
+             , x.source
+             , x.type
+             , x.quantity
+             , x.unit_value);
     }
             
 
@@ -49,9 +59,11 @@ public class Right {
             .add("internal_id", internal_id)
             .add("source", source)
             .add("type", type)
+            .add("quantity", quantity)
             .add("unit_value", unit_value)
             ;
     }
+
 
     public static List<Right> copy(final List<Right> rs) {
 
@@ -61,6 +73,32 @@ public class Right {
         }
         return rv;
     }
+
+    public BigDecimal totalValue() {
+        /*
+The following query returns no rows:
+select e.bpeqty, e.bpeup, e.bpevalue, e.bpevalue - round(e.bpeqty * e.bpeup, 2) from gaee2020.EDETEDEAEEBPE e 
+where e.BPEVALUE <> round(e.bpeqty * e.bpeup, 2)
+
+[round] in Oracle rounds away from zero, including when the LSD is 5.
+         */
+        final BigDecimal a = this.quantity.multiply(this.unit_value, MathContext.UNLIMITED);
+        final BigDecimal b = a.setScale(2, RoundingMode.UP);
+        //        System.out.printf("totalvalue %.5f became %.5f\n", a, b);
+        return b;
+    }
+
+    public static BigDecimal totalValue(final List<Right> rs) {
+        BigDecimal rv = new BigDecimal(0);
+    for (final Right r: rs) {
+        final BigDecimal tv = r.totalValue();
+        //        System.out.printf("about to add %.5f to %.5f\n", rv, tv);
+        rv = rv.add(tv, MathContext.UNLIMITED);
+    }
+    return rv;
+}
+
+
 
 }
 

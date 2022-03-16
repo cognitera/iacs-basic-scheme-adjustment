@@ -99,6 +99,7 @@ public class DBRightsTable {
                 +" x.BPE_ID           AS internal_id, "
                 +" x.BPE_GROUP_TYPE   AS source, "
                 +" x.BPE_TYPE         AS type, "
+                +" x.BPEQTY           AS quantity, "
                 +" x.BPEUP            AS unit_value "
                 +" FROM GAEE2020.EDETEDEAEEBPE x";
             ps = conn.prepareStatement(SQL);

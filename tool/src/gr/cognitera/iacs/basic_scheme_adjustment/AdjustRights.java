@@ -15,8 +15,15 @@ public class AdjustRights {
 
     public static List<Right> doWork(final RegionalValues rgValConfig
                                      , final List<Right> rights) {
+        final BigDecimal INITIAL_TOTAL_VALUE = Right.totalValue(rights);
+        System.out.printf("initial total value is: %.2f\n", INITIAL_TOTAL_VALUE);
         final List<Right> rv = Right.copy(rights);
         adjustBelowRegional(rgValConfig, rv);
+        final BigDecimal TOTAL_VALUE_AFT_BAADJ = Right.totalValue(rv);
+        System.out.printf("total value after below average adjustment is: %.2f\n", TOTAL_VALUE_AFT_BAADJ);
+        final BigDecimal SHORTFALL = TOTAL_VALUE_AFT_BAADJ.subtract(INITIAL_TOTAL_VALUE);
+        Assert.assertTrue(SHORTFALL.compareTo(BigDecimal.ZERO)>0);
+        System.out.printf("shortfall is %.2f\n", SHORTFALL);
         adjustAboveRegional(rgValConfig, rv);
 
         return rv;
@@ -30,6 +37,8 @@ public class AdjustRights {
         final MathContext addMC      = new MathContext(5, RoundingMode.HALF_EVEN);
         int adj_once = 0;
         int adj_twice = 0;
+
+
         for (final Right right: rights) {
             final BigDecimal applicableRegionalValue = rgValConfig.valueFor(right.type);
             if (right.unit_value.compareTo(applicableRegionalValue)<0) {

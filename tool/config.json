@@ -7,8 +7,8 @@
     "dbname": "ORCL"
   },
   "regional_values": {
-    "pasture": 3.124123412341234,
-    "arable": 24.1241234000001,
-    "permaCrop": 0.0000000000000003201
+    "pasture": 224.54,
+    "arable": 274.85,
+    "permaCrop": 345.81
   }
 }
