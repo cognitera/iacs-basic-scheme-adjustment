@@ -117,7 +117,7 @@ public class DBRightsTable {
                                                                , fieldOverrides
                                                                , (Map<String, String>) null);
 
-                System.out.println(right);
+                rv.add(right);
                 i++;
             }
             System.out.printf("\n\nWent through %d rows\n", i);
