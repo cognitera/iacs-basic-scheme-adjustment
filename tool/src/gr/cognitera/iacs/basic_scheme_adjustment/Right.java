@@ -76,13 +76,13 @@ public class Right {
 
     public BigDecimal totalValue() {
         /*
-The following query returns no rows:
-select e.bpeqty, e.bpeup, e.bpevalue, e.bpevalue - round(e.bpeqty * e.bpeup, 2) from gaee2020.EDETEDEAEEBPE e 
-where e.BPEVALUE <> round(e.bpeqty * e.bpeup, 2)
+          The following query returns no rows:
+          select e.bpeqty, e.bpeup, e.bpevalue, e.bpevalue - round(e.bpeqty * e.bpeup, 2) from gaee2020.EDETEDEAEEBPE e 
+          where e.BPEVALUE <> round(e.bpeqty * e.bpeup, 2)
 
-[round] in Oracle rounds to the nearest, and in case of LSB 5, it rounds away from zero.
-Hence the corresponding rounding mode in Java is HALF_UP
-         */
+          [round] in Oracle rounds to the nearest, and in case of LSB 5, it rounds away from zero.
+          Hence the corresponding rounding mode in Java is HALF_UP
+        */
         final BigDecimal a = this.quantity.multiply(this.unit_value, MathContext.UNLIMITED);
         final BigDecimal b = a.setScale(2, RoundingMode.HALF_UP);
         //        System.out.printf("totalvalue %.5f became %.5f\n", a, b);
@@ -91,18 +91,29 @@ Hence the corresponding rounding mode in Java is HALF_UP
 
     public static BigDecimal totalValue(final List<Right> rs
                                         , final RightType rightType) {
-        BigDecimal rv = new BigDecimal(0);
-    for (final Right r: rs) {
-        if (r.type.equals(rightType)) {
-            final BigDecimal tv = r.totalValue();
-            //        System.out.printf("about to add %.5f to %.5f\n", rv, tv);
-            rv = rv.add(tv, MathContext.UNLIMITED);
-        }
+        return totalValue(rs, rightType, RightValueSelector.ALL, null);
     }
-    return rv;
-}
 
-
+    public static BigDecimal totalValue(final List<Right> rs
+                                        , final RightType rightType
+                                        , final RightValueSelector selector
+                                        , final BigDecimal thres) {
+        BigDecimal rv = new BigDecimal(0);
+        for (final Right r: rs) {
+            if (r.type.equals(rightType)) {
+                final boolean consider =
+                    selector.equals(RightValueSelector.ALL) ||
+                    (selector.equals(RightValueSelector.ABOVE) && r.unit_value.compareTo(thres)>0);
+                if (consider) {
+                    final BigDecimal tv = r.totalValue();
+                    //        System.out.printf("about to add %.5f to %.5f\n", rv, tv);
+                    rv = rv.add(tv, MathContext.UNLIMITED);
+                }
+            }
+        }
+        return rv;
+    }
+    
 
 }
 

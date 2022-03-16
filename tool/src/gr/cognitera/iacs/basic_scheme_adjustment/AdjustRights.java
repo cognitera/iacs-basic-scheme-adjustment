@@ -23,17 +23,11 @@ public class AdjustRights {
                           , adjustBelowResults);
 
         
-        final BigDecimal TOTAL_VALUE_AFT_BAADJ = Right.totalValue(rights, rightType);
-        Assert.assertEquals(0, adjustBelowResults.finalV.compareTo(TOTAL_VALUE_AFT_BAADJ));
-        System.out.printf("right type: %s # total value after below average adjustment is: %.2f\n"
-                          , rightType
-                          , TOTAL_VALUE_AFT_BAADJ);
-        final BigDecimal shortfall2 = TOTAL_VALUE_AFT_BAADJ.subtract(adjustBelowResults.initial);
+        final BigDecimal totalAfterBelowAdjustment = Right.totalValue(rights, rightType);
+        Assert.assertEquals(0, adjustBelowResults.finalV.compareTo(totalAfterBelowAdjustment));
+        final BigDecimal shortfall2 = totalAfterBelowAdjustment.subtract(adjustBelowResults.initial);
         Assert.assertTrue(shortfall2.compareTo(BigDecimal.ZERO)>0);
-        System.out.printf("right type: %s # shortfall is %.2f\n"
-                          , rightType
-                          , shortfall2);
-        Assert.assertTrue(adjustBelowResults.shortFall.compareTo(shortfall2)==0);
+        Assert.assertEquals(0, adjustBelowResults.shortFall.compareTo(shortfall2));
         adjustAboveRegional(rgValConfig, rights, rightType, shortfall2);
         final BigDecimal final_value = Right.totalValue(rights, rightType);
     }
@@ -85,7 +79,17 @@ public class AdjustRights {
                                             , final List<Right> rights
                                             , final RightType rightType
                                             , final BigDecimal shortFall) {
-
+        final BigDecimal totalAbove = Right.totalValue(rights
+                                                       , rightType
+                                                       , RightValueSelector.ABOVE
+                                                       , rgValConfig.valueFor(rightType));
+        final int DISCOUNT_SCALE = 2;
+        final BigDecimal minimumHorizontalDiscount = shortFall.divide(totalAbove
+                                                                      , DISCOUNT_SCALE
+                                                                      , RoundingMode.CEILING);
+        Assert.assertEquals(DISCOUNT_SCALE, minimumHorizontalDiscount.scale());
+        System.out.printf("minimum horizontal discount calculated as: %.2f\n", minimumHorizontalDiscount);
+        
     }    
 
 
