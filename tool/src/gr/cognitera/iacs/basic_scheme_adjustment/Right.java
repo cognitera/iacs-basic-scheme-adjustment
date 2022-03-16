@@ -83,7 +83,7 @@ where e.BPEVALUE <> round(e.bpeqty * e.bpeup, 2)
 [round] in Oracle rounds away from zero, including when the LSD is 5.
          */
         final BigDecimal a = this.quantity.multiply(this.unit_value, MathContext.UNLIMITED);
-        final BigDecimal b = a.setScale(2, RoundingMode.UP);
+        final BigDecimal b = a.setScale(2, RoundingMode.HALF_UP);
         //        System.out.printf("totalvalue %.5f became %.5f\n", a, b);
         return b;
     }
