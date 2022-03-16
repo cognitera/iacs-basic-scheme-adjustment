@@ -1,0 +1,14 @@
+{
+  "db": {
+    "ip": "192.168.2.15",
+    "port": 1521,
+    "username": "system",
+    "password": "285628kL",
+    "dbname": "ORCL"
+  }
+  "values": {
+    "pasture": 3.124123412341234,
+    "arable": 24.1241234000001,
+    "permaCrop": 0.0000000000000003201
+  }
+}

@@ -26,7 +26,8 @@ public class CommandDumpTable {
         logger.info(String.format("Configuration file is: [%s]\n", configFPath));
         try {
             final String json = Files.asCharSource(new File(configFPath), StandardCharsets.UTF_8).read();
-            final DBConfig dbConfig = GsonHelper.fromJson(json, DBConfig.class);
+            final Config config = GsonHelper.fromJson(json, Config.class);
+            final DBConfig dbConfig = config.db; 
             final DataSource ds = OracleDataSourceUtil.getDataSource(dbConfig.ip
                                                                      , dbConfig.port
                                                                      , dbConfig.dbname
@@ -37,6 +38,8 @@ public class CommandDumpTable {
             final Connection conn = ds.getConnection();
             final List<Right> rights = DBRightsTable.readAllRights(conn);
             System.out.printf("%d rights read\n", rights.size());
+            final List<Right> adjusted = AdjustRights.doWork(config.regional_values, rights);
+            System.out.printf("%d rights adjusted\n", adjusted.size());
         } catch (IOException e) {
             Assert.fail(String.format("DB configuration file [%s] not found", configFPath));
         } catch (SQLException e) {
