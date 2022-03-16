@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Constructor;
@@ -427,34 +426,11 @@ public final class ResultSetHelper {
                                                    , i));
                         field.setInt(t, i);
                     } else if (fieldClass == long.class) {
-                        try {
-                            final long i = ResultSetHelper.getLong(rs, columnName);
-                            logger.trace(String.format("int field [%s] has value [%d]%n"
-                                                       , columnName
-                                                       , i));
-                            field.setLong(t, i);
-                        } catch (SQLException e) {
-                            // 
-                            final String ORACLE_FAIL_MSG = "Invalid column type: getLong not implemented for class oracle.jdbc.driver.T4CRowidAccessor";
-                            if (e.getMessage().equals(ORACLE_FAIL_MSG)) {
-                                try {
-                                    final BigDecimal decimal = rs.getBigDecimal(columnName);
-                                    final BigInteger mob = (decimal == null ? null : decimal.toBigInteger());
-                                    field.setLong(t, mob.longValue());
-                                } catch (SQLException e2) {
-                                    final String ORACLE_FAIL_MSG2 = "Invalid column type: getBigDecimal not implemented for class oracle.jdbc.driver.T4CRowidAccessor";
-                                    if (e2.getMessage().equals(ORACLE_FAIL_MSG2)) {
-                                        final String s = rs.getString(columnName);
-                                        field.setLong(t, Long.parseLong(s));
-                                    } else {
-                                        throw e2; // TODO
-                                    }
-                                }
-                            } else {
-                                logger.error("the message encountered was not expected so I couldn't try the workaround for Oracle drivers");
-                                throw e;
-                            }
-                        }
+                        final long i = ResultSetHelper.getLong(rs, columnName);
+                        logger.trace(String.format("int field [%s] has value [%d]%n"
+                                                   , columnName
+                                                   , i));
+                        field.setLong(t, i);
                     } else if (fieldClass == Float.class) {
                         final Float value = ResultSetHelper.getFloat(rs, columnName);
                         logger.trace(String.format("Float field [%s] has value [%s]%n"
