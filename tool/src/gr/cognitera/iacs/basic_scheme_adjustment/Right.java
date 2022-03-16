@@ -83,10 +83,7 @@ public class Right {
           [round] in Oracle rounds to the nearest, and in case of LSB 5, it rounds away from zero.
           Hence the corresponding rounding mode in Java is HALF_UP
         */
-        final BigDecimal a = this.quantity.multiply(this.unit_value, MathContext.UNLIMITED);
-        final BigDecimal b = a.setScale(2, RoundingMode.HALF_UP);
-        //        System.out.printf("totalvalue %.5f became %.5f\n", a, b);
-        return b;
+        return Util.mulWithScale(this.quantity, this.unit_value, 2, RoundingMode.HALF_UP);
     }
 
     public static BigDecimal totalValue(final List<Right> rs

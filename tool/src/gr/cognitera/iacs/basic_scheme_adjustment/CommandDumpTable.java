@@ -11,6 +11,8 @@ import javax.sql.DataSource;
 import org.junit.Assert;
 import org.apache.log4j.Logger;
 import org.apache.http.Header;
+import org.apache.commons.dbutils.DbUtils;
+
 
 import com.google.common.io.Files;
 
@@ -37,6 +39,7 @@ public class CommandDumpTable {
                                                                      , 0);
             final Connection conn = ds.getConnection();
             final List<Right> rights = DBRightsTable.readAllRights(conn);
+            DbUtils.closeQuietly(conn);
             System.out.printf("%d rights read\n", rights.size());
             AdjustRights.doWork(config.regional_values, rights, RightType.PASTURE);
             AdjustRights.doWork(config.regional_values, rights, RightType.ARABLE);
