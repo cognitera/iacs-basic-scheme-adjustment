@@ -8,58 +8,83 @@ import java.math.RoundingMode;
 
 import org.junit.Assert;
 
+
 public class AdjustRights {
 
 
 
 
-    public static List<Right> doWork(final RegionalValues rgValConfig
-                                     , final List<Right> rights) {
-        final BigDecimal INITIAL_TOTAL_VALUE = Right.totalValue(rights);
-        System.out.printf("initial total value is: %.2f\n", INITIAL_TOTAL_VALUE);
-        final List<Right> rv = Right.copy(rights);
-        adjustBelowRegional(rgValConfig, rv);
-        final BigDecimal TOTAL_VALUE_AFT_BAADJ = Right.totalValue(rv);
-        System.out.printf("total value after below average adjustment is: %.2f\n", TOTAL_VALUE_AFT_BAADJ);
-        final BigDecimal SHORTFALL = TOTAL_VALUE_AFT_BAADJ.subtract(INITIAL_TOTAL_VALUE);
-        Assert.assertTrue(SHORTFALL.compareTo(BigDecimal.ZERO)>0);
-        System.out.printf("shortfall is %.2f\n", SHORTFALL);
-        adjustAboveRegional(rgValConfig, rv);
+    public static void doWork(final RegionalValues rgValConfig
+                              , final List<Right> rights
+                              , final RightType rightType) {
+        final AdjustBelowResults adjustBelowResults = adjustBelowRegional(rgValConfig, rights, rightType);
+        System.out.printf("right type: %s # Adjust below results are:\n%s\n"
+                          , rightType
+                          , adjustBelowResults);
 
-        return rv;
-
+        
+        final BigDecimal TOTAL_VALUE_AFT_BAADJ = Right.totalValue(rights, rightType);
+        Assert.assertEquals(0, adjustBelowResults.finalV.compareTo(TOTAL_VALUE_AFT_BAADJ));
+        System.out.printf("right type: %s # total value after below average adjustment is: %.2f\n"
+                          , rightType
+                          , TOTAL_VALUE_AFT_BAADJ);
+        final BigDecimal shortfall2 = TOTAL_VALUE_AFT_BAADJ.subtract(adjustBelowResults.initial);
+        Assert.assertTrue(shortfall2.compareTo(BigDecimal.ZERO)>0);
+        System.out.printf("right type: %s # shortfall is %.2f\n"
+                          , rightType
+                          , shortfall2);
+        Assert.assertTrue(adjustBelowResults.shortFall.compareTo(shortfall2)==0);
+        adjustAboveRegional(rgValConfig, rights, rightType, shortfall2);
+        final BigDecimal final_value = Right.totalValue(rights, rightType);
     }
 
-    private static void adjustBelowRegional(final RegionalValues rgValConfig
-                                     , final List<Right> rights) {
+    private static AdjustBelowResults adjustBelowRegional(final RegionalValues rgValConfig
+                                                  , final List<Right> rights
+                                                  , final RightType rightType) {
         final MathContext distanceMC = new MathContext(5, RoundingMode.UNNECESSARY);
         final MathContext sixtypcMC  = new MathContext(5, RoundingMode.HALF_UP);
         final MathContext addMC      = new MathContext(5, RoundingMode.HALF_EVEN);
+
+
+        
         int adj_once = 0;
         int adj_twice = 0;
-
-
+        BigDecimal initial = Right.totalValue(rights, rightType);
+        BigDecimal shortFall = BigDecimal.ZERO;
+        BigDecimal finalV    = BigDecimal.ZERO;
         for (final Right right: rights) {
-            final BigDecimal applicableRegionalValue = rgValConfig.valueFor(right.type);
-            if (right.unit_value.compareTo(applicableRegionalValue)<0) {
-                adj_once++;
-                final BigDecimal distance = applicableRegionalValue.subtract(right.unit_value);
-                Assert.assertTrue(distance.compareTo(BigDecimal.ZERO)>0);
-                final BigDecimal third = distance.divide(distance, RoundingMode.HALF_UP);
-                BigDecimal new_unit_value = right.unit_value.add(third, addMC);
-                final BigDecimal sixtypc = applicableRegionalValue.multiply(new BigDecimal(0.6), sixtypcMC);
-                if (new_unit_value.compareTo(sixtypc)<0) {
-                    adj_twice++;
-                    new_unit_value = sixtypc;
+            if (right.type.equals(rightType)) {
+                final BigDecimal applicableRegionalValue = rgValConfig.valueFor(right.type);
+                BigDecimal newValue;
+                if (right.unit_value.compareTo(applicableRegionalValue)<0) {
+                    adj_once++;
+                    final BigDecimal distance = applicableRegionalValue.subtract(right.unit_value);
+                    Assert.assertTrue(distance.compareTo(BigDecimal.ZERO)>0);
+                    final BigDecimal third = distance.divide(distance, RoundingMode.HALF_UP);
+                    BigDecimal new_unit_value = right.unit_value.add(third, addMC);
+                    final BigDecimal sixtypc = applicableRegionalValue.multiply(new BigDecimal(0.6), sixtypcMC);
+                    if (new_unit_value.compareTo(sixtypc)<0) {
+                        adj_twice++;
+                        new_unit_value = sixtypc;
+                    }
+                    final BigDecimal prevValue= right.totalValue();
+                    right.unit_value = new_unit_value;
+                    newValue = right.totalValue();
+                    final BigDecimal diff = newValue.subtract(prevValue);
+                    Assert.assertTrue(diff.compareTo(BigDecimal.ZERO)>0);
+                    shortFall = shortFall.add(diff);
                 }
-                right.unit_value = new_unit_value; 
+                newValue = right.totalValue();
+                finalV = finalV.add(newValue);
             }
         }
-        System.out.printf("%d rights below average, %d did not reach 60%%\n", adj_once , adj_twice);
+        return new AdjustBelowResults(initial, adj_once, adj_twice, finalV, shortFall);
     }
 
     private static void adjustAboveRegional(final RegionalValues rgValConfig
-                                     , final List<Right> rights) {
+                                            , final List<Right> rights
+                                            , final RightType rightType
+                                            , final BigDecimal shortFall) {
 
     }    
 

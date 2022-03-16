@@ -38,8 +38,10 @@ public class CommandDumpTable {
             final Connection conn = ds.getConnection();
             final List<Right> rights = DBRightsTable.readAllRights(conn);
             System.out.printf("%d rights read\n", rights.size());
-            final List<Right> adjusted = AdjustRights.doWork(config.regional_values, rights);
-            System.out.printf("%d rights adjusted\n", adjusted.size());
+            AdjustRights.doWork(config.regional_values, rights, RightType.PASTURE);
+            AdjustRights.doWork(config.regional_values, rights, RightType.ARABLE);
+            AdjustRights.doWork(config.regional_values, rights, RightType.PERMACROP);
+            System.out.printf("%d rights adjusted\n", rights.size());
         } catch (IOException e) {
             Assert.fail(String.format("DB configuration file [%s] not found", configFPath));
         } catch (SQLException e) {
