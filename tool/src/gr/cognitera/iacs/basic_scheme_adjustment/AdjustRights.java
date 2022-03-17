@@ -8,8 +8,6 @@ import java.math.RoundingMode;
 
 import org.junit.Assert;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.MoreObjects.ToStringHelper;
 
 public class AdjustRights {
 
@@ -34,6 +32,10 @@ public class AdjustRights {
         System.out.printf("right type %s # adjust above results are:\n%s\n"
                           , rightType
                           , discounts);
+        System.out.printf("right type %s # after adjustment over %d rounds, surplus is %.2f (previous round surplus was: %.2f\n"
+                          , rightType
+                          , discounts.surplus(shortfall2)
+                          , discounts.previousSurplus(shortfall2));
         final BigDecimal final_value = Right.totalValue(rights, rightType);
     }
 
@@ -69,7 +71,11 @@ public class AdjustRights {
                     right.unit_value = new_unit_value;
                     newValue = right.totalValue();
                     final BigDecimal diff = newValue.subtract(prevValue);
-                    System.out.printf("righttype %s # initialUV: %.5f regional: %.5f distance: %.5f third: %.5f 60%%: %.5f, new: %.5f, prev total: %.5f new total: %.5f diff: %.5f\n"
+                    final String MSG = String.format("righttype %s # initialUV: %.5f"
+                                                     +" regional: %.5f distance: %.5f"
+                                                     +" third: %.5f 60%%: %.5f new: %.5f"
+                                                     +" prev total: %.5f new total: %.5f"
+                                                     +" diff: %.5f"
                                       , rightType
                                       , initialUV
                                       , applicableRegionalValue
@@ -80,7 +86,7 @@ public class AdjustRights {
                                       , prevValue
                                       , newValue
                                       , diff);
-                    Assert.assertTrue(diff.compareTo(BigDecimal.ZERO)>=0);
+                    Assert.assertTrue(MSG, diff.compareTo(BigDecimal.ZERO)>=0);
                     shortFall = shortFall.add(diff);
                 }
                 newValue = right.totalValue();
@@ -100,15 +106,18 @@ public class AdjustRights {
                                                        , rgValConfig.valueFor(rightType));
         final BigDecimal minimumHorizontalDiscount = calcMinimumHorizontalDiscount(totalAbove, shortFall);
         System.out.printf("minimum horizontal discount calculated as: %.5f\n", minimumHorizontalDiscount);
+        BigDecimal prevShortFallRecovered = null;
         TentativeDiscountResults tentative = null;
         int rounds = 0;
         for (BigDecimal discount = minimumHorizontalDiscount;
              discount.compareTo(maxDiscount) <= 0;
              discount = discount.add(new BigDecimal(Math.pow(10, -DISCOUNT_SCALE)))) {
             rounds ++;
+            if (rounds > 1)
+                prevShortFallRecovered = tentative.shortFallRecovered;
             tentative = tentativelyApplyDiscount(rgValConfig, rights, rightType, discount);
             final BigDecimal diff = shortFall.subtract(tentative.shortFallRecovered);
-            System.out.printf("Applying a discount of %.5f I was able to recover %.5f out of %.5f (missing %.5f\n"
+            System.out.printf("Applying a discount of %.5f I was able to recover %.5f out of %.5f (missing %.5f)\n"
                               , discount
                               , tentative.shortFallRecovered
                               , shortFall
@@ -118,7 +127,7 @@ public class AdjustRights {
                 break;
         }
         Assert.assertNotNull(tentative);
-        return new FinalDiscountResults(rounds, tentative);
+        return new FinalDiscountResults(rounds, tentative.rights, tentative.shortFallRecovered, prevShortFallRecovered);
     }
 
     private static TentativeDiscountResults tentativelyApplyDiscount(final RegionalValues rgValConfig
@@ -169,37 +178,4 @@ public class AdjustRights {
     private static final int DISCOUNT_SCALE = 4;
 }
 
-class TentativeDiscountResults {
-    public List<Right> rights;
-    public BigDecimal shortFallRecovered;
 
-    public TentativeDiscountResults(final List<Right> rights,
-                                    final BigDecimal shortFallRecovered) {
-        this.rights = rights;
-        this.shortFallRecovered = shortFallRecovered;
-    }
-        
-}
-
-class FinalDiscountResults {
-    public int rounds;
-    public TentativeDiscountResults results;
-
-    public FinalDiscountResults(final int rounds
-                                , final TentativeDiscountResults results) {
-        this.rounds = rounds;
-        this.results = results;
-    }
-
-    @Override
-    public String toString() {
-        return toStringHelper().toString();
-    }
-
-    protected ToStringHelper toStringHelper() {
-        return MoreObjects.toStringHelper(this)
-            .add("rounds", rounds)
-            .add("shortFallRecovered", results.shortFallRecovered)
-            ;
-    }    
-}
