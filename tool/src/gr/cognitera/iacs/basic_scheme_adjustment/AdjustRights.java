@@ -18,8 +18,9 @@ public class AdjustRights {
     public static void doWork(final RegionalValues rgValConfig
                               , final List<Right> rights
                               , final RightType rightType) {
+        final RightStats stats1 = Right.computeStats(rights, rightType);
         final AdjustBelowResults adjustBelowResults = adjustBelowRegional(rgValConfig, rights, rightType);
-        logger.info("right type: [%s] raises # Initial TVBRV: %.2f%s %d rights raised by 1/3 of distance %d rights further raised to reach 60%, final TVBRV %2.f%s, shortfall %.2f%s\n"
+        logger.info("right type: [%s] raises # Initial TVBRV: %.2f%s %d rights raised by 1/3 of distance %d rights further raised to reach 60%%, final TVBRV %.2f%s, shortfall %.2f%s\n"
                     , rightType.name
                     , adjustBelowResults.initial
                     , EUR
@@ -31,23 +32,23 @@ public class AdjustRights {
                     , EUR);
 
         
-        final BigDecimal totalAfterBelowAdjustment = Right.totalValue(rights, rightType);
-        Assert.assertEquals(0, adjustBelowResults.finalV.compareTo(totalAfterBelowAdjustment));
-        final BigDecimal shortfall2 = totalAfterBelowAdjustment.subtract(adjustBelowResults.initial);
-        Assert.assertTrue(shortfall2.compareTo(BigDecimal.ZERO)>0);
-        Assert.assertEquals(0, adjustBelowResults.shortFall.compareTo(shortfall2));
-        final FinalDiscountResults discount = adjustAboveRegional(rgValConfig, rights, rightType, shortfall2);
+        final RightStats stats2 = Right.computeStats(rights, rightType);
+        final BigDecimal shortfall = stats2.valueOfRights.subtract(stats1.valueOfRights);
+        Assert.assertTrue(shortfall.compareTo(BigDecimal.ZERO)>0);
+        Assert.assertEquals(0, adjustBelowResults.shortFall.compareTo(shortfall));
+        final FinalDiscountResults discount = adjustAboveRegional(rgValConfig, rights, rightType, shortfall);
         logger.info("right type %s # adjust above results are:\n%s\n"
                     , rightType
                     , discount);
         logger.info("right type %s # after adjustment over %d rounds, surplus is %.2f (previous round surplus was: %.2f)\n"
                     , rightType
                     , discount.rounds
-                    , discount.surplus(shortfall2)
-                    , discount.previousSurplus(shortfall2));
-        logger.info("right type: [%s] reductions # Initial value: %.2f%s %d rights raised by 1/3 of distance %d rights further raised to reach 60%, final value %2.f%s, shortfall %.2f%s\n"
+                    , discount.surplus(shortfall)
+                    , discount.previousSurplus(shortfall));
+        /*        logger.info("right type: [%s] reductions # Initial value: %.2f%s %d rights raised by 1/3 of distance %d rights further raised to reach 60%, final value %2.f%s, shortfall %.2f%s\n"
                     ); // TODO
-        final BigDecimal final_value = Right.totalValue(rights, rightType);
+        */
+        final RightStats stats3 = Right.computeStats(rights, rightType);
     }
 
     private static AdjustBelowResults adjustBelowRegional(final RegionalValues rgValConfig
@@ -58,15 +59,15 @@ public class AdjustRights {
         
         int adj_once = 0;
         int adj_twice = 0;
-        BigDecimal initial = Right.totalValue(rights, rightType);
+        BigDecimal initial   = BigDecimal.ZERO;
         BigDecimal shortFall = BigDecimal.ZERO;
         BigDecimal finalV    = BigDecimal.ZERO;
         for (final Right right: rights) {
             if (right.type.equals(rightType)) {
                 final BigDecimal applicableRegionalValue = rgValConfig.valueFor(right.type);
-                BigDecimal newValue;
                 if (right.unit_value.compareTo(applicableRegionalValue)<0) {
                     adj_once++;
+                    initial = initial.add(right.totalValue());
                     final BigDecimal initialUV = right.unit_value.add(BigDecimal.ZERO);
                     final BigDecimal distance = applicableRegionalValue.subtract(initialUV);
                     Assert.assertTrue(distance.compareTo(BigDecimal.ZERO)>0);
@@ -80,7 +81,7 @@ public class AdjustRights {
                     new_unit_value = new_unit_value.setScale(3, RoundingMode.HALF_UP);
                     final BigDecimal prevValue= right.totalValue();
                     right.unit_value = new_unit_value;
-                    newValue = right.totalValue();
+                    final BigDecimal newValue = right.totalValue();
                     final BigDecimal diff = newValue.subtract(prevValue);
                     final String MSG = String.format("righttype %s # initialUV: %.5f"
                                                      +" regional: %.5f distance: %.5f"
@@ -99,9 +100,8 @@ public class AdjustRights {
                                       , diff);
                     Assert.assertTrue(MSG, diff.compareTo(BigDecimal.ZERO)>=0);
                     shortFall = shortFall.add(diff);
+                    finalV = finalV.add(newValue);
                 }
-                newValue = right.totalValue();
-                finalV = finalV.add(newValue);
             }
         }
         return new AdjustBelowResults(initial, adj_once, adj_twice, finalV, shortFall);
@@ -111,10 +111,10 @@ public class AdjustRights {
                                                             , final List<Right> rights
                                                             , final RightType rightType
                                                             , final BigDecimal shortFall) {
-        final BigDecimal totalAbove = Right.totalValue(rights
-                                                       , rightType
-                                                       , RightValueSelector.ABOVE
-                                                       , rgValConfig.valueFor(rightType));
+        final BigDecimal totalAbove = Right.computeStats(rights
+                                                         , rightType
+                                                         , RightValueSelector.ABOVE
+                                                         , rgValConfig.valueFor(rightType)).valueOfRights;
         final BigDecimal minimumHorizontalDiscount = calcMinimumHorizontalDiscount(totalAbove, shortFall);
         logger.debug("minimum horizontal discount calculated as: %.5f\n", minimumHorizontalDiscount);
         BigDecimal prevShortFallRecovered = null;

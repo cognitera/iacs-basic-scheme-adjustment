@@ -86,18 +86,26 @@ public class Right {
         return Util.mulWithScale(this.quantity, this.unit_value, 2, RoundingMode.HALF_UP);
     }
 
-    public static BigDecimal totalValue(final List<Right> rs
+    public static RightStats computeStats(final List<Right> rs) {
+        return computeStats(rs, (RightType) null);
+    }
+    
+    public static RightStats computeStats(final List<Right> rs
                                         , final RightType rightType) {
-        return totalValue(rs, rightType, RightValueSelector.ALL, null);
+        return computeStats(rs, rightType, RightValueSelector.ALL, null);
     }
 
-    public static BigDecimal totalValue(final List<Right> rs
-                                        , final RightType rightType
-                                        , final RightValueSelector selector
-                                        , final BigDecimal x) {
-        BigDecimal rv = new BigDecimal(0);
+    public static RightStats computeStats(final List<Right> rs
+                                          , final RightType rightType
+                                          , final RightValueSelector selector
+                                          , final BigDecimal x) {
+        int numOfRecords = 0;
+        BigDecimal numOfRights      = BigDecimal.ZERO;
+        BigDecimal valueOfRights    = BigDecimal.ZERO;
+        BigDecimal lowestUnitValue  = null;
+        BigDecimal highestUnitValue = null;
         for (final Right r: rs) {
-            if (r.type.equals(rightType)) {
+            if ((rightType==null) || (r.type.equals(rightType))) {
                 final boolean consider =
                     selector.equals(RightValueSelector.ALL) ||
                     (
@@ -108,13 +116,21 @@ public class Right {
                      (selector.equals(RightValueSelector.BELOW) && (r.unit_value.compareTo(x)<0))
                      );
                 if (consider) {
-                    final BigDecimal tv = r.totalValue();
-                    //        System.out.printf("about to add %.5f to %.5f\n", rv, tv);
-                    rv = rv.add(tv, MathContext.UNLIMITED);
+                    numOfRecords++;
+                    numOfRights = numOfRights.add(r.quantity);
+                    valueOfRights = valueOfRights.add(r.totalValue());
+                    if ((lowestUnitValue==null) || (r.unit_value.compareTo(lowestUnitValue)<0))
+                        lowestUnitValue = r.unit_value;
+                    if ((highestUnitValue==null) || (r.unit_value.compareTo(highestUnitValue)>0))
+                        highestUnitValue = r.unit_value;
                 }
             }
         }
-        return rv;
+        return new RightStats(numOfRecords
+                              , numOfRights
+                              , valueOfRights
+                              , lowestUnitValue
+                              , highestUnitValue);
     }
     
 

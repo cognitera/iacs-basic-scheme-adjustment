@@ -23,6 +23,7 @@ import gr.cognitera.util.gson.GsonHelper;
 import gr.cognitera.util.jdbc.OracleDataSourceUtil;
 
 public class CommandDumpTable {
+    private static final String EUR = "\u20ac";
     final static Logger logger = Logger.INSTANCE;
 
     public static void exec(final String configFPath) {
@@ -48,15 +49,28 @@ public class CommandDumpTable {
             final List<Right> rights = DBRightsTable.readAllRights(conn);
             DbUtils.closeQuietly(conn);
             stopwatch.stop();
-            logger.info("%d rights read in %d seconds. Proceeding to adjust rights...\n"
+            logger.info("%d rights read in %d seconds.\n"
                         , rights.size()
                         , stopwatch.elapsed(TimeUnit.MILLISECONDS));
-            logger.info("TV: Total Value of all rights"); 
-            logger.info("TVBRV: Total Value of rights Below Regional Value");
-            logger.info("TVARV: Total Value of rights Above Regional Value");
+            logger.info("Acronyms to keep in mind:\n");
+            logger.info("TVALL: Total Value of all rights\n"); 
+            logger.info("TVBRV: Total Value of rights Below Regional Value\n");
+            logger.info("TVARV: Total Value of rights Above Regional Value\n");
+            final RightStats stats1 = Right.computeStats(rights);
+            logger.info("(before adjustment) # of records: %d\t# of rights: %.2f\tTVALL: %.2f%s\n"
+                        , stats1.numOfRecords
+                        , stats1.numOfRights
+                        , stats1.valueOfRights
+                        , EUR);
+            logger.info("Proceeding to adjust rights...\n");
             AdjustRights.doWork(config.regional_values, rights, RightType.PASTURE);
             AdjustRights.doWork(config.regional_values, rights, RightType.ARABLE);
             AdjustRights.doWork(config.regional_values, rights, RightType.PERMACROP);
+            logger.info("(after adjustment) # of records: %d\t# of rights: %.2f\tTVALL: %.2f%s\n"
+                        , stats1.numOfRecords
+                        , stats1.numOfRights
+                        , stats1.valueOfRights
+                        , EUR);
         } catch (IOException e) {
             Assert.fail(String.format("DB configuration file [%s] not found", configFPath));
         } catch (SQLException e) {
