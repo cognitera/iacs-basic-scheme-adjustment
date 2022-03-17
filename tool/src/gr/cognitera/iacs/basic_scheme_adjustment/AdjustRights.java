@@ -12,15 +12,15 @@ import org.junit.Assert;
 public class AdjustRights {
 
 
-
+    private static Logger logger = Logger.INSTANCE;
 
     public static void doWork(final RegionalValues rgValConfig
                               , final List<Right> rights
                               , final RightType rightType) {
         final AdjustBelowResults adjustBelowResults = adjustBelowRegional(rgValConfig, rights, rightType);
-        System.out.printf("right type: %s # Adjust below results are:\n%s\n"
-                          , rightType
-                          , adjustBelowResults);
+        logger.info("right type: %s # Adjust below results are:\n%s\n"
+                    , rightType
+                    , adjustBelowResults);
 
         
         final BigDecimal totalAfterBelowAdjustment = Right.totalValue(rights, rightType);
@@ -28,14 +28,15 @@ public class AdjustRights {
         final BigDecimal shortfall2 = totalAfterBelowAdjustment.subtract(adjustBelowResults.initial);
         Assert.assertTrue(shortfall2.compareTo(BigDecimal.ZERO)>0);
         Assert.assertEquals(0, adjustBelowResults.shortFall.compareTo(shortfall2));
-        final FinalDiscountResults discounts = adjustAboveRegional(rgValConfig, rights, rightType, shortfall2);
-        System.out.printf("right type %s # adjust above results are:\n%s\n"
-                          , rightType
-                          , discounts);
-        System.out.printf("right type %s # after adjustment over %d rounds, surplus is %.2f (previous round surplus was: %.2f\n"
-                          , rightType
-                          , discounts.surplus(shortfall2)
-                          , discounts.previousSurplus(shortfall2));
+        final FinalDiscountResults discount = adjustAboveRegional(rgValConfig, rights, rightType, shortfall2);
+        logger.info("right type %s # adjust above results are:\n%s\n"
+                    , rightType
+                    , discount);
+        logger.info("right type %s # after adjustment over %d rounds, surplus is %.2f (previous round surplus was: %.2f\n"
+                    , rightType
+                    , discount.rounds
+                    , discount.surplus(shortfall2)
+                    , discount.previousSurplus(shortfall2));
         final BigDecimal final_value = Right.totalValue(rights, rightType);
     }
 
@@ -105,7 +106,7 @@ public class AdjustRights {
                                                        , RightValueSelector.ABOVE
                                                        , rgValConfig.valueFor(rightType));
         final BigDecimal minimumHorizontalDiscount = calcMinimumHorizontalDiscount(totalAbove, shortFall);
-        System.out.printf("minimum horizontal discount calculated as: %.5f\n", minimumHorizontalDiscount);
+        logger.debug("minimum horizontal discount calculated as: %.5f\n", minimumHorizontalDiscount);
         BigDecimal prevShortFallRecovered = null;
         TentativeDiscountResults tentative = null;
         int rounds = 0;
@@ -117,11 +118,11 @@ public class AdjustRights {
                 prevShortFallRecovered = tentative.shortFallRecovered;
             tentative = tentativelyApplyDiscount(rgValConfig, rights, rightType, discount);
             final BigDecimal diff = shortFall.subtract(tentative.shortFallRecovered);
-            System.out.printf("Applying a discount of %.5f I was able to recover %.5f out of %.5f (missing %.5f)\n"
-                              , discount
-                              , tentative.shortFallRecovered
-                              , shortFall
-                              , diff);
+            logger.trace("Applying a discount of %.5f I was able to recover %.5f out of %.5f (missing %.5f)\n"
+                         , discount
+                         , tentative.shortFallRecovered
+                         , shortFall
+                         , diff);
 
             if (diff.compareTo(BigDecimal.ZERO)<=0)
                 break;

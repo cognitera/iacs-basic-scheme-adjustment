@@ -36,6 +36,9 @@ public class AdjustCLI {
     @Parameter(names = {"-h", "--help"}, description="print help and exit", required=false)
     public boolean help = false;
 
+    @Parameter(names = {"-v", "--verbosity"}, description="set verbosity level (info, debug or trace)", required=false)
+    public String verbosity = "silent";
+     
     @ParameterValidation
     public void validateParams() {
         /*

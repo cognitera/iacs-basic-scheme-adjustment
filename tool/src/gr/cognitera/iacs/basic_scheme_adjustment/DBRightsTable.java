@@ -22,7 +22,6 @@ import javax.sql.DataSource;
 
 import org.junit.Assert;
 
-import org.apache.log4j.Logger;
 
 import org.apache.commons.dbutils.DbUtils;
 
@@ -72,7 +71,7 @@ public class DBRightsTable {
     final static Logger logger;
     static {
         klass = DBRightsTable.class;
-        logger = Logger.getLogger(klass);
+        logger = Logger.INSTANCE;
     }
 
     private static Map<String, CustomFieldReader<?>> prepareFieldOverrides() {
@@ -112,8 +111,8 @@ public class DBRightsTable {
             int i = 0;
             final Map<String, CustomFieldReader<?>> fieldOverrides = prepareFieldOverrides();
             while (rs.next()) {
-                System.out.printf(".");
-                final Right right = ResultSetHelper.readObject(logger
+                logger.debug(".");
+                final Right right = ResultSetHelper.readObject((org.apache.log4j.Logger)null
                                                                , rs
                                                                , Right.class
                                                                , true
@@ -123,7 +122,7 @@ public class DBRightsTable {
                 rv.add(right);
                 i++;
             }
-            System.out.printf("\n\nWent through %d rows\n", i);
+            logger.debug("\n\nWent through %d rows\n", i);
             return rv;
         }
      /*catch (IOException | URISyntaxException e) {

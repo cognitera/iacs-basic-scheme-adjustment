@@ -32,17 +32,23 @@ public class Adjust {
                 }
             } else {
                 if (cli.commandName!=null) {
-                    AdjustCLI.COMMAND command = AdjustCLI.COMMAND.fromName(cli.commandName);
-                    Assert.assertNotNull(String.format("you should expect to never see this message, if the command [%s] was not recognized, parsing of the command line arguments should have failed before this point"
-                                                       , cli.commandName), command);
-                    switch (command) {
-                    case DUMP_TABLE: {
-                        DumpTableCLI commandCLI = (DumpTableCLI) cli.commandParams;
-                        CommandDumpTable.exec(commandCLI.config);
-                        break;
-                    }
-                    default:
-                        Assert.fail(String.format("Unhandled case [%s]", command));
+                    final Verbosity verbosity = Verbosity.fromCode(cli.mainParams.verbosity);
+                    if (verbosity==null)
+                        throw new ParameterValidationException(String.format("unrecognized verbosity value: [%s]", cli.mainParams.verbosity));
+                    else {
+                        Logger.INSTANCE.setVerbosity(verbosity);
+                        AdjustCLI.COMMAND command = AdjustCLI.COMMAND.fromName(cli.commandName);
+                        Assert.assertNotNull(String.format("you should expect to never see this message, if the command [%s] was not recognized, parsing of the command line arguments should have failed before this point"
+                                                           , cli.commandName), command);
+                        switch (command) {
+                        case DUMP_TABLE: {
+                            DumpTableCLI commandCLI = (DumpTableCLI) cli.commandParams;
+                            CommandDumpTable.exec(commandCLI.config);
+                            break;
+                        }
+                        default:
+                            Assert.fail(String.format("Unhandled case [%s]", command));
+                        }
                     }
                 } else {
                     throw new ParameterValidationException("A command has to be provided when the '-h' flag is not set.");
