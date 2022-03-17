@@ -40,9 +40,6 @@ public class AdjustRights {
     private static AdjustBelowResults adjustBelowRegional(final RegionalValues rgValConfig
                                                   , final List<Right> rights
                                                   , final RightType rightType) {
-        final MathContext distanceMC = new MathContext(5, RoundingMode.UNNECESSARY);
-        final MathContext sixtypcMC  = new MathContext(5, RoundingMode.HALF_UP);
-        final MathContext addMC      = new MathContext(5, RoundingMode.HALF_EVEN);
 
 
         
@@ -61,12 +58,13 @@ public class AdjustRights {
                     final BigDecimal distance = applicableRegionalValue.subtract(initialUV);
                     Assert.assertTrue(distance.compareTo(BigDecimal.ZERO)>0);
                     final BigDecimal third = distance.divide(new BigDecimal(3), RoundingMode.HALF_UP);
-                    BigDecimal new_unit_value = initialUV.add(third, addMC);
-                    final BigDecimal sixtypc = applicableRegionalValue.multiply(new BigDecimal(0.6), sixtypcMC);
+                    BigDecimal new_unit_value = initialUV.add(third);
+                    final BigDecimal sixtypc = applicableRegionalValue.multiply(new BigDecimal(0.6));
                     if (new_unit_value.compareTo(sixtypc)<0) {
                         adj_twice++;
                         new_unit_value = sixtypc;
                     }
+                    new_unit_value = new_unit_value.setScale(3, RoundingMode.HALF_UP);
                     final BigDecimal prevValue= right.totalValue();
                     right.unit_value = new_unit_value;
                     newValue = right.totalValue();
