@@ -18,6 +18,7 @@ public class FinalDiscountResults {
     public int        recordsLoweredThenRaised;
     public BigDecimal rightsLoweredThenRaised;
     public BigDecimal finalAllRightsValue;
+    public BigDecimal discountUsed;
     public BigDecimal surplus;
 
     public BigDecimal prevSurplus;
@@ -25,6 +26,7 @@ public class FinalDiscountResults {
     public FinalDiscountResults(final int rounds
                                 , final List<Right> rights
                                 , final TentativeDiscountResults results
+                                , final BigDecimal discountUsed
                                 , final BigDecimal prevSurplus) {
         this.rounds           = rounds;
         this.rights           = rights;
@@ -39,6 +41,7 @@ public class FinalDiscountResults {
         this.finalAllRightsValue      = results.finalAllRightsValue;
         this.surplus                  = results.surplus;
 
+        this.discountUsed             = discountUsed;
         this.prevSurplus              = prevSurplus;
     }
 

@@ -51,7 +51,7 @@ public class AdjustRights {
                     +" | RARV: %d records (%.2f rights)"
                     +" \u2014 of which %d records (%.2f rights) reached the RV"
                     +" | AR: %.2f%s"
-                    +" | surplus of %.2f%s\n"
+                    +" | surplus of %.2f%s achieved with a discount of %.3f %%\n"
                     , rightType.name
                     , discount.allRecords
                     , discount.allRights
@@ -65,6 +65,7 @@ public class AdjustRights {
                     , EUR
                     , discount.surplus
                     , EUR
+                    , discount.discountUsed.multiply(new BigDecimal(100))
                     );
         
         final RightStats stats3 = Right.computeStats(rights, rightType);
@@ -158,10 +159,12 @@ public class AdjustRights {
         List<Right> rightsTentative = null;
         TentativeDiscountResults tentative = null;
         int rounds = 0;
+        BigDecimal discountUsed = null;
         for (BigDecimal discount = minimumHorizontalDiscount;
              discount.compareTo(maxDiscount) <= 0;
              discount = discount.add(new BigDecimal(Math.pow(10, -DISCOUNT_SCALE)))) {
             rounds ++;
+            discountUsed = discount;
             if (rounds > 1)
                 prevSurplus = tentative.surplus;
             rightsTentative = Right.copy(rights);
@@ -177,7 +180,7 @@ public class AdjustRights {
                 break;
         }
         Assert.assertNotNull(tentative);
-        return new FinalDiscountResults(rounds, rightsTentative, tentative, prevSurplus);
+        return new FinalDiscountResults(rounds, rightsTentative, tentative, discountUsed, prevSurplus);
     }
 
     private static TentativeDiscountResults tentativelyApplyDiscount(  final List<Right> rights
