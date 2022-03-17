@@ -20,42 +20,32 @@ public class AdjustRights {
                                      , final RightType rightType) {
         final RightStats stats1 = Right.computeStats(rights, rightType);
         final AdjustBelowResults adjustBelowResults = adjustBelowRegional(rgValConfig, rights, rightType);
-        logger.info("right type: [%s] raises     | Initial TVBRV: %.2f%s"
-                    +" # %d rights (%.2f%s) raised by 1/3 of distance"
-                    +" # %d rights (%.2f%s) further raised to reach 60%%"
-                    +" # final TVBRV %.2f%s, shortfall %.2f%s\n"
+        logger.info("right type: [%s] raises    "
+                    +" | AR: %d records %.2f rights %.2f%s"
+                    +" | RBRV %d records (%.2f rights)"
+                    +" \u2014 of which %d records (%.2f rights) were further raised (beyond 1/3 of the distance) to reach 60%%"
+                    +" | AR: %.2f%s"
+                    +" | deficit: %.2f%s\n"
                     , rightType.name
-                    , adjustBelowResults.initial
+                    , adjustBelowResults.allRecords
+                    , adjustBelowResults.allRights
+                    , adjustBelowResults.allRightsValue
                     , EUR
                     , adjustBelowResults.recordsRaised
                     , adjustBelowResults.rightsRaised
-                    , EUR
                     , adjustBelowResults.recordsFurtherRaised
                     , adjustBelowResults.rightsFurtherRaised
+                    , adjustBelowResults.finalAllRightsValue
                     , EUR
-                    , adjustBelowResults.finalV
-                    , EUR
-                    , adjustBelowResults.shortFall
+                    , adjustBelowResults.deficit
                     , EUR);
 
         
         final RightStats stats2 = Right.computeStats(rights, rightType);
-        final BigDecimal shortfall = stats2.valueOfRights.subtract(stats1.valueOfRights);
-        Assert.assertTrue(shortfall.compareTo(BigDecimal.ZERO)>0);
-        Assert.assertEquals(0, adjustBelowResults.shortFall.compareTo(shortfall));
-        final FinalDiscountResults discount = adjustAboveRegional(rgValConfig, rights, rightType, shortfall);
-        /*
-        logger.info("right type %s # adjust above results are:\n%s\n"
-                    , rightType
-                    , discount);
-        logger.info("right type %s # after adjustment over %d rounds, surplus is %.2f%s (previous round surplus was: %.2f%s)\n"
-                    , rightType
-                    , discount.rounds
-                    , discount.savings(shortfall)
-                    , EUR
-                    , discount.prevSavings(shortfall)
-                    , EUR);
-        */
+        final BigDecimal deficit = stats2.valueOfRights.subtract(stats1.valueOfRights);
+        Assert.assertTrue(deficit.compareTo(BigDecimal.ZERO)>0);
+        Assert.assertEquals(0, adjustBelowResults.deficit.compareTo(deficit));
+        final FinalDiscountResults discount = adjustAboveRegional(rgValConfig, rights, rightType, deficit);
         logger.info("right type: [%s] reductions"
                     +" | initial: %d records %.2f rights (%.2f%s TVARV)"
                     +" | lowered: %d records %.2f rights"
@@ -86,24 +76,25 @@ public class AdjustRights {
                                                   , final RightType rightType) {
 
 
-        
-
-
-        BigDecimal initial              = BigDecimal.ZERO;
-        int        recordsRaised        = 0;
-        BigDecimal rightsRaised         = BigDecimal.ZERO;
-        int        recordsFurtherRaised = 0;
-        BigDecimal rightsFurtherRaised  = BigDecimal.ZERO;
-        BigDecimal finalV               = BigDecimal.ZERO;
-        BigDecimal shortFall            = BigDecimal.ZERO;
+        int        allRecords               = 0;
+        BigDecimal allRights                = BigDecimal.ZERO;
+        BigDecimal allRightsValue           = BigDecimal.ZERO;
+        int        recordsRaised            = 0;
+        BigDecimal rightsRaised             = BigDecimal.ZERO;
+        int        recordsFurtherRaised     = 0;
+        BigDecimal rightsFurtherRaised      = BigDecimal.ZERO;
+        BigDecimal finalAllRightsValue      = BigDecimal.ZERO;
+        BigDecimal shortFall                = BigDecimal.ZERO;
 
         for (final Right right: rights) {
             if (right.type.equals(rightType)) {
+                allRecords++;
+                allRights = allRights.add(right.quantity);
+                allRightsValue = allRightsValue.add(right.totalValue());
                 final BigDecimal applicableRegionalValue = rgValConfig.valueFor(right.type);
                 if (right.unit_value.compareTo(applicableRegionalValue)<0) {
                     recordsRaised++;
                     rightsRaised = rightsRaised.add(right.quantity);
-                    initial = initial.add(right.totalValue());
                     final BigDecimal initialUV = right.unit_value.add(BigDecimal.ZERO);
                     final BigDecimal distance = applicableRegionalValue.subtract(initialUV);
                     Assert.assertTrue(distance.compareTo(BigDecimal.ZERO)>0);
@@ -137,17 +128,20 @@ public class AdjustRights {
                                       , diff);
                     Assert.assertTrue(MSG, diff.compareTo(BigDecimal.ZERO)>=0);
                     shortFall = shortFall.add(diff);
-                    finalV = finalV.add(newValue);
                 }
+                final BigDecimal newValue = right.totalValue();
+                finalAllRightsValue = finalAllRightsValue.add(newValue);
             }
         }
-        return new AdjustBelowResults(initial
-                                      , recordsRaised
-                                      , rightsRaised
-                                      , recordsFurtherRaised
-                                      , rightsFurtherRaised
-                                      , finalV
-                                      , shortFall);
+        return new AdjustBelowResults(allRecords,
+                                      allRights,
+                                      allRightsValue,
+                                      recordsRaised,
+                                      rightsRaised,
+                                      recordsFurtherRaised,
+                                      rightsFurtherRaised,
+                                      finalAllRightsValue,
+                                      shortFall);
     }
 
     private static FinalDiscountResults adjustAboveRegional(final RegionalValues rgValConfig

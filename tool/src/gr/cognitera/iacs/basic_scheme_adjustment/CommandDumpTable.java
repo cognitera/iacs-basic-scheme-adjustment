@@ -53,11 +53,11 @@ public class CommandDumpTable {
                         , rights.size()
                         , stopwatch.elapsed(TimeUnit.SECONDS));
             logger.info("Acronyms to keep in mind:\n");
-            logger.info("TVALL: Total Value of all rights\n"); 
-            logger.info("TVBRV: Total Value of rights Below Regional Value\n");
-            logger.info("TVARV: Total Value of rights Above Regional Value\n");
+            logger.info("AR: All Rights\n");
+            logger.info("RBRV: Rights Below Regional Value\n");
+            logger.info("RARV: Rights Above Regional Value\n");
             final RightStats stats1 = Right.computeStats(rights);
-            logger.info("(before adjustment) # of records: %d\t# of rights: %.2f\tTVALL: %.2f%s\n"
+            logger.info("(before adjustment) | AR: %d records %.2f rights %.2f%s\n"
                         , stats1.numOfRecords
                         , stats1.numOfRights
                         , stats1.valueOfRights
@@ -67,7 +67,7 @@ public class CommandDumpTable {
             rights = AdjustRights.doWork(config.regional_values, rights, RightType.ARABLE);
             rights = AdjustRights.doWork(config.regional_values, rights, RightType.PERMACROP);
             final RightStats stats2 = Right.computeStats(rights);            
-            logger.info("(after adjustment) # of records: %d\t# of rights: %.2f\tTVALL: %.2f%s\n"
+            logger.info("(after adjustment) | AR: %d records %.2f rights %.2f%s\n"
                         , stats2.numOfRecords
                         , stats2.numOfRights
                         , stats2.valueOfRights
