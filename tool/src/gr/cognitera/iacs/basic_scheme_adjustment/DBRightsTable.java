@@ -100,7 +100,7 @@ public class DBRightsTable {
                 +" x.BPE_TYPE         AS type, "
                 +" x.BPEQTY           AS quantity, "
                 +" x.BPEUP            AS unit_value "
-                +" FROM GAEE2020.EDETEDEAEEBPE x"
+                +" FROM GAEE2021.EDETEDEAEEBPE x"
                 //    +" WHERE mod(id, 1000)=0" // TODO
                 ;
             ps = conn.prepareStatement(SQL);
