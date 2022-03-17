@@ -46,12 +46,12 @@ public class CommandDumpTable {
                         , dbConfig.dbname);
 
             final Stopwatch stopwatch = Stopwatch.createStarted();
-            final List<Right> rights = DBRightsTable.readAllRights(conn);
+            List<Right> rights = DBRightsTable.readAllRights(conn);
             DbUtils.closeQuietly(conn);
             stopwatch.stop();
             logger.info("%d rights read in %d seconds.\n"
                         , rights.size()
-                        , stopwatch.elapsed(TimeUnit.MILLISECONDS));
+                        , stopwatch.elapsed(TimeUnit.SECONDS));
             logger.info("Acronyms to keep in mind:\n");
             logger.info("TVALL: Total Value of all rights\n"); 
             logger.info("TVBRV: Total Value of rights Below Regional Value\n");
@@ -63,13 +63,14 @@ public class CommandDumpTable {
                         , stats1.valueOfRights
                         , EUR);
             logger.info("Proceeding to adjust rights...\n");
-            AdjustRights.doWork(config.regional_values, rights, RightType.PASTURE);
-            AdjustRights.doWork(config.regional_values, rights, RightType.ARABLE);
-            AdjustRights.doWork(config.regional_values, rights, RightType.PERMACROP);
+            rights = AdjustRights.doWork(config.regional_values, rights, RightType.PASTURE);
+            rights = AdjustRights.doWork(config.regional_values, rights, RightType.ARABLE);
+            rights = AdjustRights.doWork(config.regional_values, rights, RightType.PERMACROP);
+            final RightStats stats2 = Right.computeStats(rights);            
             logger.info("(after adjustment) # of records: %d\t# of rights: %.2f\tTVALL: %.2f%s\n"
-                        , stats1.numOfRecords
-                        , stats1.numOfRights
-                        , stats1.valueOfRights
+                        , stats2.numOfRecords
+                        , stats2.numOfRights
+                        , stats2.valueOfRights
                         , EUR);
         } catch (IOException e) {
             Assert.fail(String.format("DB configuration file [%s] not found", configFPath));

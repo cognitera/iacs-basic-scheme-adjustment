@@ -10,17 +10,36 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 public class FinalDiscountResults {
     public int rounds;
     public List<Right> rights;
-    public BigDecimal shortFallRecovered;
-    public BigDecimal prevShortFallRecovered;
+    public int        allRecords;
+    public BigDecimal allRights;
+    public BigDecimal allRightsValue;
+    public int        recordsLowered;
+    public BigDecimal rightsLowered;
+    public int        recordsLoweredThenRaised;
+    public BigDecimal rightsLoweredThenRaised;
+    public BigDecimal finalAllRightsValue;
+    public BigDecimal surplus;
+
+    public BigDecimal prevSurplus;
 
     public FinalDiscountResults(final int rounds
                                 , final List<Right> rights
-                                , final BigDecimal shortFallRecovered
-                                , final BigDecimal prevShortFallRecovered) {
-        this.rounds = rounds;
-        this.rights = rights;
-        this.shortFallRecovered = shortFallRecovered;
-        this.prevShortFallRecovered = prevShortFallRecovered;
+                                , final TentativeDiscountResults results
+                                , final BigDecimal prevSurplus) {
+        this.rounds           = rounds;
+        this.rights           = rights;
+        
+        this.allRecords               = results.allRecords;
+        this.allRights                = results.allRights;
+        this.allRightsValue           = results.allRightsValue;
+        this.recordsLowered           = results.recordsLowered;
+        this.rightsLowered            = results.rightsLowered;
+        this.recordsLoweredThenRaised = results.recordsLoweredThenRaised;
+        this.rightsLoweredThenRaised  = results.rightsLoweredThenRaised;
+        this.finalAllRightsValue      = results.finalAllRightsValue;
+        this.surplus                  = results.surplus;
+
+        this.prevSurplus              = prevSurplus;
     }
 
     @Override
@@ -32,16 +51,16 @@ public class FinalDiscountResults {
         return MoreObjects.toStringHelper(this)
             .add("rounds", rounds)
             .add("#rights", rights.size())
-            .add("shortFallRecovered", shortFallRecovered)
-            .add("prevShortFallRecovered", prevShortFallRecovered)
+            .add("surplus", surplus)
+            .add("prev-surplus", prevSurplus)
             ;
     }
 
-    public BigDecimal surplus(final BigDecimal shortFall) {
-        return this.shortFallRecovered.subtract(shortFall);
+    public BigDecimal savings(final BigDecimal shortFall) {
+        return this.surplus.subtract(shortFall);
     }
 
-    public BigDecimal previousSurplus(final BigDecimal shortFall) {
-        return this.prevShortFallRecovered.subtract(shortFall);
+    public BigDecimal prevSavings(final BigDecimal shortFall) {
+        return this.prevSurplus.subtract(shortFall);
     }
 }

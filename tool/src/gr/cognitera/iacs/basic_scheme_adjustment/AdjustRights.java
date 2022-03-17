@@ -15,12 +15,12 @@ public class AdjustRights {
 
     private static Logger logger = Logger.INSTANCE;
 
-    public static void doWork(final RegionalValues rgValConfig
-                              , final List<Right> rights
-                              , final RightType rightType) {
+    public static List<Right> doWork(final RegionalValues rgValConfig
+                                     , final List<Right> rights
+                                     , final RightType rightType) {
         final RightStats stats1 = Right.computeStats(rights, rightType);
         final AdjustBelowResults adjustBelowResults = adjustBelowRegional(rgValConfig, rights, rightType);
-        logger.info("right type: [%s] raises # Initial TVBRV: %.2f%s"
+        logger.info("right type: [%s] raises     | Initial TVBRV: %.2f%s"
                     +" # %d rights (%.2f%s) raised by 1/3 of distance"
                     +" # %d rights (%.2f%s) further raised to reach 60%%"
                     +" # final TVBRV %.2f%s, shortfall %.2f%s\n"
@@ -44,18 +44,41 @@ public class AdjustRights {
         Assert.assertTrue(shortfall.compareTo(BigDecimal.ZERO)>0);
         Assert.assertEquals(0, adjustBelowResults.shortFall.compareTo(shortfall));
         final FinalDiscountResults discount = adjustAboveRegional(rgValConfig, rights, rightType, shortfall);
+        /*
         logger.info("right type %s # adjust above results are:\n%s\n"
                     , rightType
                     , discount);
-        logger.info("right type %s # after adjustment over %d rounds, surplus is %.2f (previous round surplus was: %.2f)\n"
+        logger.info("right type %s # after adjustment over %d rounds, surplus is %.2f%s (previous round surplus was: %.2f%s)\n"
                     , rightType
                     , discount.rounds
-                    , discount.surplus(shortfall)
-                    , discount.previousSurplus(shortfall));
-        /*        logger.info("right type: [%s] reductions # Initial value: %.2f%s %d rights raised by 1/3 of distance %d rights further raised to reach 60%, final value %2.f%s, shortfall %.2f%s\n"
-                    ); // TODO
+                    , discount.savings(shortfall)
+                    , EUR
+                    , discount.prevSavings(shortfall)
+                    , EUR);
         */
+        logger.info("right type: [%s] reductions"
+                    +" | initial: %d records %.2f rights (%.2f%s TVARV)"
+                    +" | lowered: %d records %.2f rights"
+                    +" | thresho: %d records %.2f rights"
+                    +" | final value: %.2f%s"
+                    +" | surplus of %.2f%s\n"
+                    , rightType.name
+                    , discount.allRecords
+                    , discount.allRights
+                    , discount.allRightsValue
+                    , EUR
+                    , discount.recordsLowered
+                    , discount.rightsLowered
+                    , discount.recordsLoweredThenRaised
+                    , discount.rightsLoweredThenRaised
+                    , discount.finalAllRightsValue
+                    , EUR
+                    , discount.surplus
+                    , EUR
+                    );
+        
         final RightStats stats3 = Right.computeStats(rights, rightType);
+        return discount.rights;
     }
 
     private static AdjustBelowResults adjustBelowRegional(final RegionalValues rgValConfig
@@ -137,7 +160,8 @@ public class AdjustRights {
                                                          , rgValConfig.valueFor(rightType)).valueOfRights;
         final BigDecimal minimumHorizontalDiscount = calcMinimumHorizontalDiscount(totalAbove, shortFall);
         logger.debug("minimum horizontal discount calculated as: %.5f\n", minimumHorizontalDiscount);
-        BigDecimal prevShortFallRecovered = null;
+        BigDecimal prevSurplus = null;
+        List<Right> rightsTentative = null;
         TentativeDiscountResults tentative = null;
         int rounds = 0;
         for (BigDecimal discount = minimumHorizontalDiscount;
@@ -145,12 +169,13 @@ public class AdjustRights {
              discount = discount.add(new BigDecimal(Math.pow(10, -DISCOUNT_SCALE)))) {
             rounds ++;
             if (rounds > 1)
-                prevShortFallRecovered = tentative.shortFallRecovered;
-            tentative = tentativelyApplyDiscount(rgValConfig, rights, rightType, discount);
-            final BigDecimal diff = shortFall.subtract(tentative.shortFallRecovered);
+                prevSurplus = tentative.surplus;
+            rightsTentative = Right.copy(rights);
+            tentative = tentativelyApplyDiscount(rightsTentative, rgValConfig, rightType, discount);
+            final BigDecimal diff = shortFall.subtract(tentative.surplus);
             logger.trace("Applying a discount of %.5f I was able to recover %.5f out of %.5f (missing %.5f)\n"
                          , discount
-                         , tentative.shortFallRecovered
+                         , tentative.surplus
                          , shortFall
                          , diff);
 
@@ -158,33 +183,59 @@ public class AdjustRights {
                 break;
         }
         Assert.assertNotNull(tentative);
-        return new FinalDiscountResults(rounds, tentative.rights, tentative.shortFallRecovered, prevShortFallRecovered);
+        return new FinalDiscountResults(rounds, rightsTentative, tentative, prevSurplus);
     }
 
-    private static TentativeDiscountResults tentativelyApplyDiscount(final RegionalValues rgValConfig
-                                                                     , final List<Right> _rights
+    private static TentativeDiscountResults tentativelyApplyDiscount(  final List<Right> rights
+                                                                     , final RegionalValues rgValConfig
                                                                      , final RightType rightType
-                                                                     , final BigDecimal discount) {
-        final List<Right> rights = Right.copy(_rights);
-        BigDecimal shortFallRecovered = BigDecimal.ZERO;
+                                                                       , final BigDecimal discount) {
+        int        allRecords                  = 0;
+        BigDecimal allRights                   = BigDecimal.ZERO;
+        BigDecimal allRightsValue              = BigDecimal.ZERO;
+        int        recordsLowered              = 0;
+        BigDecimal rightsLowered               = BigDecimal.ZERO;
+        int        recordsLoweredThenRaised    = 0;
+        BigDecimal rightsLoweredThenRaised     = BigDecimal.ZERO;
+        BigDecimal finalAllRightsValue         = BigDecimal.ZERO;
+        BigDecimal surplus                     = BigDecimal.ZERO;
         for (final Right r: rights) {
-            if (r.type.equals(rightType) && (r.unit_value.compareTo(rgValConfig.valueFor(rightType))>0)) {
+            if (r.type.equals(rightType)) {
+                allRecords++;
+                allRights = allRights.add(r.quantity);
                 final BigDecimal prevValue = r.totalValue();
-                BigDecimal newUnitValue = Util.mulWithScale(r.unit_value
-                                                            , BigDecimal.ONE.subtract(discount)
-                                                            , 3
-                                                            , RoundingMode.HALF_UP);
-                if (newUnitValue.compareTo(rgValConfig.valueFor(rightType))<0) {
-                    newUnitValue = rgValConfig.valueFor(rightType);
+                allRightsValue = allRightsValue.add(prevValue);
+                if (r.unit_value.compareTo(rgValConfig.valueFor(rightType))>0) {
+                    recordsLowered++;
+                    rightsLowered = rightsLowered.add(r.quantity);
+                    BigDecimal newUnitValue = Util.mulWithScale(r.unit_value
+                                                                , BigDecimal.ONE.subtract(discount)
+                                                                , 3
+                                                                , RoundingMode.HALF_UP);
+                    if (newUnitValue.compareTo(rgValConfig.valueFor(rightType))<0) {
+                        recordsLoweredThenRaised++;
+                        rightsLoweredThenRaised = rightsLoweredThenRaised.add(r.quantity);
+                        newUnitValue = rgValConfig.valueFor(rightType);
+                    }
+                    r.unit_value = newUnitValue;
+                    final BigDecimal newValue = r.totalValue();
+                    final BigDecimal diff = prevValue.subtract(newValue);
+                    Assert.assertTrue(diff.compareTo(BigDecimal.ZERO)>=0);
+                    surplus = surplus.add(diff);
                 }
-                r.unit_value = newUnitValue;
                 final BigDecimal newValue = r.totalValue();
-                final BigDecimal diff = prevValue.subtract(newValue);
-                Assert.assertTrue(diff.compareTo(BigDecimal.ZERO)>=0);
-                shortFallRecovered = shortFallRecovered.add(diff);
+                finalAllRightsValue = finalAllRightsValue.add(newValue);
             }
         }
-        return new TentativeDiscountResults(rights, shortFallRecovered);
+        return new TentativeDiscountResults(allRecords
+                                            , allRights
+                                            , allRightsValue
+                                            , recordsLowered
+                                            , rightsLowered
+                                            , recordsLoweredThenRaised
+                                            , rightsLoweredThenRaised
+                                            , finalAllRightsValue
+                                            , surplus);
     }
 
     private static BigDecimal calcMinimumHorizontalDiscount(final BigDecimal totalAbove
