@@ -54,6 +54,7 @@ public class CommandDumpTable {
                         , stopwatch.elapsed(TimeUnit.SECONDS));
             logger.info("Acronyms to keep in mind:\n");
             logger.info("AR: All Rights\n");
+            logger.info("RV: Regional Value\n");
             logger.info("RBRV: Rights Below Regional Value\n");
             logger.info("RARV: Rights Above Regional Value\n");
             final RightStats stats1 = Right.computeStats(rights);

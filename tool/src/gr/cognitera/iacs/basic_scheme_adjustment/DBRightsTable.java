@@ -101,7 +101,7 @@ public class DBRightsTable {
                 +" x.BPEQTY           AS quantity, "
                 +" x.BPEUP            AS unit_value "
                 +" FROM GAEE2020.EDETEDEAEEBPE x"
-                                +" WHERE mod(id, 1000)=0" // TODO
+                //    +" WHERE mod(id, 1000)=0" // TODO
                 ;
             ps = conn.prepareStatement(SQL);
             //            ps.setInt(1, appId);
@@ -111,7 +111,7 @@ public class DBRightsTable {
             int i = 0;
             final Map<String, CustomFieldReader<?>> fieldOverrides = prepareFieldOverrides();
             while (rs.next()) {
-                logger.debug(".");
+                logger.trace(".");
                 final Right right = ResultSetHelper.readObject((org.apache.log4j.Logger)null
                                                                , rs
                                                                , Right.class

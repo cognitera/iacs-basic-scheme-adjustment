@@ -23,7 +23,7 @@ public class AdjustRights {
         logger.info("right type: [%s] raises    "
                     +" | AR: %d records %.2f rights %.2f%s"
                     +" | RBRV %d records (%.2f rights)"
-                    +" \u2014 of which %d records (%.2f rights) were further raised (beyond 1/3 of the distance) to reach 60%%"
+                    +" \u2014 of which %d records (%.2f rights) were further raised"
                     +" | AR: %.2f%s"
                     +" | deficit: %.2f%s\n"
                     , rightType.name
@@ -47,10 +47,10 @@ public class AdjustRights {
         Assert.assertEquals(0, adjustBelowResults.deficit.compareTo(deficit));
         final FinalDiscountResults discount = adjustAboveRegional(rgValConfig, rights, rightType, deficit);
         logger.info("right type: [%s] reductions"
-                    +" | initial: %d records %.2f rights (%.2f%s TVARV)"
-                    +" | lowered: %d records %.2f rights"
-                    +" | thresho: %d records %.2f rights"
-                    +" | final value: %.2f%s"
+                    +" | AR: %d records %.2f rights %.2f%s"
+                    +" | RARV: %d records (%.2f rights)"
+                    +" \u2014 of which %d records (%.2f rights) reached the RV"
+                    +" | AR: %.2f%s"
                     +" | surplus of %.2f%s\n"
                     , rightType.name
                     , discount.allRecords

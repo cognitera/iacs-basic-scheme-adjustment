@@ -20,7 +20,7 @@ public enum Logger {
     }
 
     public void trace(final String format, final Object... args) {
-        if (verbosity.gte(Verbosity.DEBUG))
+        if (verbosity.gte(Verbosity.TRACE))
             System.out.printf(format, args);
     }
     
