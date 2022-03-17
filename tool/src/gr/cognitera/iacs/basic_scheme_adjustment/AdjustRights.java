@@ -20,12 +20,19 @@ public class AdjustRights {
                               , final RightType rightType) {
         final RightStats stats1 = Right.computeStats(rights, rightType);
         final AdjustBelowResults adjustBelowResults = adjustBelowRegional(rgValConfig, rights, rightType);
-        logger.info("right type: [%s] raises # Initial TVBRV: %.2f%s %d rights raised by 1/3 of distance %d rights further raised to reach 60%%, final TVBRV %.2f%s, shortfall %.2f%s\n"
+        logger.info("right type: [%s] raises # Initial TVBRV: %.2f%s"
+                    +" # %d rights (%.2f%s) raised by 1/3 of distance"
+                    +" # %d rights (%.2f%s) further raised to reach 60%%"
+                    +" # final TVBRV %.2f%s, shortfall %.2f%s\n"
                     , rightType.name
                     , adjustBelowResults.initial
                     , EUR
+                    , adjustBelowResults.recordsRaised
                     , adjustBelowResults.rightsRaised
+                    , EUR
+                    , adjustBelowResults.recordsFurtherRaised
                     , adjustBelowResults.rightsFurtherRaised
+                    , EUR
                     , adjustBelowResults.finalV
                     , EUR
                     , adjustBelowResults.shortFall
@@ -57,16 +64,22 @@ public class AdjustRights {
 
 
         
-        int adj_once = 0;
-        int adj_twice = 0;
-        BigDecimal initial   = BigDecimal.ZERO;
-        BigDecimal shortFall = BigDecimal.ZERO;
-        BigDecimal finalV    = BigDecimal.ZERO;
+
+
+        BigDecimal initial              = BigDecimal.ZERO;
+        int        recordsRaised        = 0;
+        BigDecimal rightsRaised         = BigDecimal.ZERO;
+        int        recordsFurtherRaised = 0;
+        BigDecimal rightsFurtherRaised  = BigDecimal.ZERO;
+        BigDecimal finalV               = BigDecimal.ZERO;
+        BigDecimal shortFall            = BigDecimal.ZERO;
+
         for (final Right right: rights) {
             if (right.type.equals(rightType)) {
                 final BigDecimal applicableRegionalValue = rgValConfig.valueFor(right.type);
                 if (right.unit_value.compareTo(applicableRegionalValue)<0) {
-                    adj_once++;
+                    recordsRaised++;
+                    rightsRaised = rightsRaised.add(right.quantity);
                     initial = initial.add(right.totalValue());
                     final BigDecimal initialUV = right.unit_value.add(BigDecimal.ZERO);
                     final BigDecimal distance = applicableRegionalValue.subtract(initialUV);
@@ -75,7 +88,8 @@ public class AdjustRights {
                     BigDecimal new_unit_value = initialUV.add(third);
                     final BigDecimal sixtypc = applicableRegionalValue.multiply(new BigDecimal(0.6));
                     if (new_unit_value.compareTo(sixtypc)<0) {
-                        adj_twice++;
+                        recordsFurtherRaised++;
+                        rightsFurtherRaised = rightsFurtherRaised.add(right.quantity);
                         new_unit_value = sixtypc;
                     }
                     new_unit_value = new_unit_value.setScale(3, RoundingMode.HALF_UP);
@@ -104,7 +118,13 @@ public class AdjustRights {
                 }
             }
         }
-        return new AdjustBelowResults(initial, adj_once, adj_twice, finalV, shortFall);
+        return new AdjustBelowResults(initial
+                                      , recordsRaised
+                                      , rightsRaised
+                                      , recordsFurtherRaised
+                                      , rightsFurtherRaised
+                                      , finalV
+                                      , shortFall);
     }
 
     private static FinalDiscountResults adjustAboveRegional(final RegionalValues rgValConfig

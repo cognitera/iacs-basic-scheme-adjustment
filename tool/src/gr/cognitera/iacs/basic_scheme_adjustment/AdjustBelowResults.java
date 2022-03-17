@@ -7,21 +7,27 @@ import java.math.BigDecimal;
 
 class AdjustBelowResults {
     public BigDecimal initial;
-    public int rightsRaised;
-    public int rightsFurtherRaised;
+    public int        recordsRaised;
+    public BigDecimal rightsRaised;
+    public int        recordsFurtherRaised;
+    public BigDecimal rightsFurtherRaised;
     public BigDecimal finalV;
     public BigDecimal shortFall;
 
     public AdjustBelowResults(final BigDecimal initial,
-                              final int rightsRaised,
-                              final int rightsFurtherRaised,
+                              final int        recordsRaised,
+                              final BigDecimal rightsRaised,
+                              final int        recordsFurtherRaised,
+                              final BigDecimal rightsFurtherRaised,
                               final BigDecimal finalV,
                               final BigDecimal shortFall) {
-        this.initial = initial;
-        this.rightsRaised = rightsRaised;
-        this.rightsFurtherRaised = rightsFurtherRaised;
-        this.finalV = finalV;
-        this.shortFall = shortFall;
+        this.initial              = initial;
+        this.recordsRaised        = recordsRaised;
+        this.rightsRaised         = rightsRaised;
+        this.recordsFurtherRaised = recordsFurtherRaised;
+        this.rightsFurtherRaised  = rightsFurtherRaised;
+        this.finalV               = finalV;
+        this.shortFall            = shortFall;
     }
 
     @Override
