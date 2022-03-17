@@ -5,7 +5,7 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 
 public enum RightValueSelector {
 
-    ALL("all"), ABOVE("above");
+    ALL("all"), ABOVE("above"), EXACT("exact"), BELOW("below");
 
     private String code;
 

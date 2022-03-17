@@ -94,13 +94,19 @@ public class Right {
     public static BigDecimal totalValue(final List<Right> rs
                                         , final RightType rightType
                                         , final RightValueSelector selector
-                                        , final BigDecimal thres) {
+                                        , final BigDecimal x) {
         BigDecimal rv = new BigDecimal(0);
         for (final Right r: rs) {
             if (r.type.equals(rightType)) {
                 final boolean consider =
                     selector.equals(RightValueSelector.ALL) ||
-                    (selector.equals(RightValueSelector.ABOVE) && r.unit_value.compareTo(thres)>0);
+                    (
+                     (selector.equals(RightValueSelector.ABOVE) && (r.unit_value.compareTo(x)>0))
+                     ||
+                     (selector.equals(RightValueSelector.EXACT) && (r.unit_value.compareTo(x)==0))
+                     ||
+                     (selector.equals(RightValueSelector.BELOW) && (r.unit_value.compareTo(x)<0))
+                     );
                 if (consider) {
                     final BigDecimal tv = r.totalValue();
                     //        System.out.printf("about to add %.5f to %.5f\n", rv, tv);

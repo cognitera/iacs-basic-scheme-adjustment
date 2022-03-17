@@ -3,6 +3,7 @@ package gr.cognitera.iacs.basic_scheme_adjustment;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -13,8 +14,9 @@ import org.apache.http.Header;
 import org.apache.commons.dbutils.DbUtils;
 
 
-import com.google.common.io.Files;
 
+import com.google.common.io.Files;
+import com.google.common.base.Stopwatch;
 
 
 import gr.cognitera.util.gson.GsonHelper;
@@ -37,9 +39,21 @@ public class CommandDumpTable {
                                                                      , 1
                                                                      , 0);
             final Connection conn = ds.getConnection();
+            logger.info("Reading rights from %s:%d database %s...\n"
+                        , dbConfig.ip
+                        , dbConfig.port
+                        , dbConfig.dbname);
+
+            final Stopwatch stopwatch = Stopwatch.createStarted();
             final List<Right> rights = DBRightsTable.readAllRights(conn);
             DbUtils.closeQuietly(conn);
-            logger.info("%d rights read\n", rights.size());
+            stopwatch.stop();
+            logger.info("%d rights read in %d seconds. Proceeding to adjust rights...\n"
+                        , rights.size()
+                        , stopwatch.elapsed(TimeUnit.MILLISECONDS));
+            logger.info("TV: Total Value of all rights"); 
+            logger.info("TVBRV: Total Value of rights Below Regional Value");
+            logger.info("TVARV: Total Value of rights Above Regional Value");
             AdjustRights.doWork(config.regional_values, rights, RightType.PASTURE);
             AdjustRights.doWork(config.regional_values, rights, RightType.ARABLE);
             AdjustRights.doWork(config.regional_values, rights, RightType.PERMACROP);

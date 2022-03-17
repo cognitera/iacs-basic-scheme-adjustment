@@ -11,6 +11,7 @@ import org.junit.Assert;
 
 public class AdjustRights {
 
+    private static final String EUR = "\u20ac";
 
     private static Logger logger = Logger.INSTANCE;
 
@@ -18,9 +19,16 @@ public class AdjustRights {
                               , final List<Right> rights
                               , final RightType rightType) {
         final AdjustBelowResults adjustBelowResults = adjustBelowRegional(rgValConfig, rights, rightType);
-        logger.info("right type: %s # Adjust below results are:\n%s\n"
-                    , rightType
-                    , adjustBelowResults);
+        logger.info("right type: [%s] raises # Initial TVBRV: %.2f%s %d rights raised by 1/3 of distance %d rights further raised to reach 60%, final TVBRV %2.f%s, shortfall %.2f%s\n"
+                    , rightType.name
+                    , adjustBelowResults.initial
+                    , EUR
+                    , adjustBelowResults.rightsRaised
+                    , adjustBelowResults.rightsFurtherRaised
+                    , adjustBelowResults.finalV
+                    , EUR
+                    , adjustBelowResults.shortFall
+                    , EUR);
 
         
         final BigDecimal totalAfterBelowAdjustment = Right.totalValue(rights, rightType);
@@ -32,11 +40,13 @@ public class AdjustRights {
         logger.info("right type %s # adjust above results are:\n%s\n"
                     , rightType
                     , discount);
-        logger.info("right type %s # after adjustment over %d rounds, surplus is %.2f (previous round surplus was: %.2f\n"
+        logger.info("right type %s # after adjustment over %d rounds, surplus is %.2f (previous round surplus was: %.2f)\n"
                     , rightType
                     , discount.rounds
                     , discount.surplus(shortfall2)
                     , discount.previousSurplus(shortfall2));
+        logger.info("right type: [%s] reductions # Initial value: %.2f%s %d rights raised by 1/3 of distance %d rights further raised to reach 60%, final value %2.f%s, shortfall %.2f%s\n"
+                    ); // TODO
         final BigDecimal final_value = Right.totalValue(rights, rightType);
     }
 

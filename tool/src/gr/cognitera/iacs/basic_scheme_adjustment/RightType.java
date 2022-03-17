@@ -5,12 +5,15 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 
 public enum RightType {
 
-    PASTURE(1), ARABLE(2), PERMACROP(3);
+    PASTURE(1, "pasture"), ARABLE(2, "arable"), PERMACROP(3, "permacrop");
 
-    private int code;
+    private final int code;
+    public final String name;
 
-    private RightType(final int code) {
+    private RightType(final int code
+                      , final String name) {
         this.code = code;
+        this.name = name;
     }
 
     public static RightType fromCode(final int code) {
