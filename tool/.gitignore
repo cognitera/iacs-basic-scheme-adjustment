@@ -10,4 +10,4 @@ ivy-bs.xml.control
 lib-ivy-buildsystem/
 junit*.properties
 junitvmwatcher*.properties
-dbconfig.json        
+config.json

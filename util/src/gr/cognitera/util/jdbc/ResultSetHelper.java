@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
+import java.util.LinkedHashSet;
 import java.math.BigDecimal;
 
 import java.lang.reflect.Field;
@@ -313,7 +314,7 @@ public final class ResultSetHelper {
         return rv;
     }
 
-    private static void  sanityTestForFieldOverrides(Class<?> klass, Map<String, CustomFieldReader<?>> fieldOverrides) throws NoSuchFieldException {
+    private static void sanityCheckForFieldOverrides(Class<?> klass, Map<String, CustomFieldReader<?>> fieldOverrides) throws NoSuchFieldException {
         for (Map.Entry<String, CustomFieldReader<?>> entry: fieldOverrides.entrySet()) {
             final String fieldOverrideColumnLabel        = entry.getKey();
             final CustomFieldReader<?> customFieldReader = entry.getValue();
@@ -330,39 +331,35 @@ public final class ResultSetHelper {
         }
     }
 
-    public static <T> T readObject(final Logger _logger
-                                   , final ResultSet rs
-                                   , final Class<T> klass
-                                   , final boolean strict
-                                   , final IFieldOverridesProvider fieldOverridesProvider
-                                   , final Map<String, String> field2Column) throws SQLException {
-        return readObject(_logger
-                          , rs
-                          , klass
-                          , strict
-                          , fieldOverridesProvider.provideFieldOverridesBasedOnAssumedTypology(klass)
-                          , field2Column
-                          );
-    }
 
-    public static Map<String, String> prepareIgnoreColumns(final String ...columns) {
-        final Map<String, String> rv = new LinkedHashMap<>();
-        for (final String column: columns)
-            rv.put(column, null);
+    public static Set<String> prepareIgnoredFields(final String ...fieldnames) {
+        final Set<String> rv = new LinkedHashSet<>();
+        for (final String fieldname: fieldnames)
+            Assert.assertNull(String.format("field [%s] already encountered", fieldname)
+                              , rv.add(fieldname));
         return rv;
     }
 
-    /*
-     *
-     * if [strict] then unhandled property classes are not tolerated 
-     *
-     */
+    private static void sanityCheckForIgnoredFields(Class<?> klass, Set<String> ignoredFields) throws NoSuchFieldException {
+        if (ignoredFields!=null) {
+            for (final String ignoredField: ignoredFields) {
+                try {
+                    klass.getDeclaredField(ignoredField);
+                }
+                catch ( NoSuchFieldException e ) {
+                    Assert.fail(String.format("Class [%s] does not contain field [%s]"
+                                              , klass.getName()
+                                              , ignoredField));
+                }
+            }
+        }
+    }
+
     public static <T> T readObject(final Logger _logger
                                    , final ResultSet rs
                                    , final Class<T> klass
-                                   , final boolean strict
                                    , Map<String, CustomFieldReader<?>> fieldOverrides
-                                   , Map<String, String> field2Column) throws SQLException {
+                                   , Set<String> ignoredFields) throws SQLException {
         try {
             Logger logger = _logger;
             if (logger == null)
@@ -370,14 +367,15 @@ public final class ResultSetHelper {
             Assert.assertNotNull(logger);
             if (fieldOverrides==null)
                 fieldOverrides = new LinkedHashMap<>();
-            sanityTestForFieldOverrides(klass, fieldOverrides);
+            sanityCheckForFieldOverrides(klass, fieldOverrides);
+            sanityCheckForIgnoredFields(klass, ignoredFields);
             final Constructor<T> constructor = klass.getConstructor();
             final T t = constructor.newInstance();
             final Field[] fields = klass.getFields();
             for (Field field: fields) {
                 if (fieldOverrides.containsKey(field.getName())) {
                     final CustomFieldReader<?> customFieldReader = fieldOverrides.get(field.getName());
-                    final Object o = customFieldReader.read(rs);
+                    final Object o = customFieldReader.read(rs, field.getName());
                     field.set(t, o);
                     logger.trace(String.format("field overrides: field [%s] in class [%s] is overriden and so was read by the custom field reader [%s] which assigned it a value of [%s]"
                                                , field.getName()
@@ -391,14 +389,7 @@ public final class ResultSetHelper {
                                                , klass.getName()
                                                , fieldClass.getName()));
                     String columnName = field.getName();
-                    if ((field2Column!=null) && (field2Column.containsKey(field.getName()))) {
-                        columnName = field2Column.get(field.getName());
-                        logger.trace(String.format("field [%s] maps to column [%s]\n"
-                                                   , field.getName()
-                                                   , columnName));
-                    }
-
-                    if (columnName == null)
+                    if ((ignoredFields!=null) && (ignoredFields.contains(columnName)))
                         continue;
                     
                     if (fieldClass == String.class) {
@@ -475,8 +466,10 @@ public final class ResultSetHelper {
                         final BigDecimal bd = ResultSetHelper.getBigDecimal(rs, columnName);
                         field.set(t, bd);
                     } else {
-                        if (strict)
-                            Assert.fail(String.format("Unhandled class: %s", fieldClass.getName()));
+                        if (ignoredFields!=null)
+                            Assert.fail(String.format("Unhandled field [%s] (class: %s)"
+                                                      , columnName
+                                                      , fieldClass.getName()));
                     }
                 } // if (fieldOverride.containsKey(field)) :: else
             } // for

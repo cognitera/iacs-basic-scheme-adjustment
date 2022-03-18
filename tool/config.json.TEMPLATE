@@ -5,10 +5,10 @@
     "username": "changeme",
     "password": "changeme",
     "dbname": "changeme"
-  }
+  },
   "regional_values": {
-    "pasture": 3.124123412341234,
-    "arable": 24.1241234000001,
-    "permaCrop": 0.0000000000000003201
+    "pasture": 111.11,
+    "arable": 222.22,
+    "permaCrop": 333.33
   }
 }

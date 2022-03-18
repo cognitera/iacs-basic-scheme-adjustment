@@ -18,15 +18,9 @@ public class RightSourceFieldReader implements CustomFieldReader<RightSource> {
         return RightSource.class;
     }
 
-    public RightSourceFieldReader(final String columnLabel) {
-        this.columnLabel = columnLabel;
-    }
-
-    private final String columnLabel;
-
     @Override
-    public RightSource read(final ResultSet rs) throws SQLException {
-        final Integer code = rs.getInt(this.columnLabel);
+    public RightSource read(final ResultSet rs, final String columnLabel) throws SQLException {
+        final Integer code = rs.getInt(columnLabel);
         if (code==null)
             return null;
         else {

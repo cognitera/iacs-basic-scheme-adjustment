@@ -56,7 +56,6 @@ import gr.cognitera.util.jdbc.AutocommitExplicitTransaction;
 import gr.cognitera.util.jdbc.AutocommitExplicitTransactionReturningVoid;
 import gr.cognitera.util.jdbc.DataSourceLookupHelper;
 import gr.cognitera.util.jdbc.ConnectionHelper;
-import gr.cognitera.util.jdbc.IFieldOverridesProvider;
 import gr.cognitera.util.io.FileUtil;
 import gr.cognitera.util.jdbc.ResultSetHelper;
 import gr.cognitera.util.jdbc.ISO8601NoTZImplicitUTCFieldReader;
@@ -76,8 +75,8 @@ public class DBRightsTable {
 
     private static Map<String, CustomFieldReader<?>> prepareFieldOverrides() {
         final Map<String, CustomFieldReader<?>> rv = new LinkedHashMap<>();
-        Assert.assertNull(rv.put("source", new RightSourceFieldReader("source")));
-        Assert.assertNull(rv.put("type"  , new RightTypeFieldReader("type")));
+        Assert.assertNull(rv.put("source", new RightSourceFieldReader()));
+        Assert.assertNull(rv.put("type"  , new RightTypeFieldReader()));
         return rv;
     }
 
@@ -115,9 +114,8 @@ public class DBRightsTable {
                 final Right right = ResultSetHelper.readObject((org.apache.log4j.Logger)null
                                                                , rs
                                                                , Right.class
-                                                               , true
                                                                , fieldOverrides
-                                                               , (Map<String, String>) null);
+                                                               , new LinkedHashSet<String>());
 
                 rv.add(right);
                 i++;

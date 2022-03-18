@@ -126,9 +126,8 @@ public final class HLUtil {
                                            , final String sqlName
                                            , final Connection conn
                                            , final int key
-                                           , final boolean strict
                                            , final Map<String, CustomFieldReader<?>> fieldOverrides
-                                           , final Map<String, String> field2Column) throws SQLException {
+                                           , final Set<String> ignoredFields) throws SQLException {
         PreparedStatement ps   = null;
         ResultSet         rs   = null;
         try {
@@ -148,9 +147,8 @@ public final class HLUtil {
                 rv.add(ResultSetHelper.readObject(logger
                                                   , rs
                                                   , klass
-                                                  , strict
                                                   , fieldOverrides
-                                                  , field2Column));
+                                                  , ignoredFields));
             }
             return rv;
         }
@@ -169,7 +167,7 @@ public final class HLUtil {
                                   , final int key
                                   , final boolean strict
                                   , final Map<String, CustomFieldReader<?>> fieldOverrides
-                                  , final Map<String, String> field2Column) throws SQLException {
+                                  , final Set<String> ignoredFields) throws SQLException {
         PreparedStatement ps   = null;
         ResultSet         rs   = null;
         try {
@@ -193,9 +191,8 @@ public final class HLUtil {
                 rv = ResultSetHelper.readObject(logger
                                                 , rs
                                                 , klass
-                                                , strict
                                                 , fieldOverrides
-                                                , field2Column);
+                                                , ignoredFields);
             }
             return rv;
         }

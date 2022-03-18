@@ -17,16 +17,9 @@ public class RightTypeFieldReader implements CustomFieldReader<RightType> {
     public Class<RightType> getHandledClass() {
         return RightType.class;
     }
-
-    public RightTypeFieldReader(final String columnLabel) {
-        this.columnLabel = columnLabel;
-    }
-
-    private final String columnLabel;
-
     @Override
-    public RightType read(final ResultSet rs) throws SQLException {
-        final Integer code = rs.getInt(this.columnLabel);
+    public RightType read(final ResultSet rs, final String columnLabel) throws SQLException {
+        final Integer code = rs.getInt(columnLabel);
         if (code==null)
             return null;
         else {

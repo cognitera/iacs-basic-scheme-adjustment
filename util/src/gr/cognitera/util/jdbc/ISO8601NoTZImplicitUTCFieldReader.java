@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 
 import java.time.Instant;
 
-import org.apache.log4j.Logger;
 
 
 import gr.cognitera.util.time.ISO8601Util;
@@ -14,13 +13,7 @@ import gr.cognitera.util.time.ISO8601Util;
 
 
 public class ISO8601NoTZImplicitUTCFieldReader implements CustomFieldReader<Instant> {
-    final static Logger logger = Logger.getLogger(ISO8601NoTZImplicitUTCFieldReader.class);
 
-    public ISO8601NoTZImplicitUTCFieldReader(final String columnLabel) {
-        this.columnLabel = columnLabel;
-    }
-
-    private final String columnLabel;
 
     @Override
     public Class<Instant> getHandledClass() {
@@ -28,8 +21,8 @@ public class ISO8601NoTZImplicitUTCFieldReader implements CustomFieldReader<Inst
     }
 
     @Override
-    public Instant read(ResultSet rs) throws SQLException {
-        String rv = rs.getString(this.columnLabel);
+    public Instant read(final ResultSet rs, final String columnLabel) throws SQLException {
+        String rv = rs.getString(columnLabel);
         if (rv==null)
             return null;
         else

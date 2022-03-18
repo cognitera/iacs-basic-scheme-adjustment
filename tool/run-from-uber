@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+##############################################################
+# old way of finding where this script lives 
+# ME=`basename $0`
+# WHERE_I_LIVE=${BASH_SOURCE[0]/%${ME}/.}
+
+##############################################################
+# improved way
+# this works even if it's called via symlinks (in contrast
+# to the way shown above)
+# source: http://stackoverflow.com/a/179231/274677
+#
+WHERE_I_LIVE="${BASH_SOURCE[0]}";
+if ([ -h "${WHERE_I_LIVE}" ]) then
+   while([ -h "${WHERE_I_LIVE}" ]) do WHERE_I_LIVE=`readlink "${WHERE_I_LIVE}"`; done
+   fi
+        pushd . > /dev/null
+        cd `dirname ${WHERE_I_LIVE}` > /dev/null
+        WHERE_I_LIVE=`pwd`;
+        popd  > /dev/null
+#
+##############################################################
+
+java -Dlog4j.configuration=file:"${WHERE_I_LIVE}"/log4j.properties -jar dist/iacs-basic-scheme-adjustment-1.0.0-uber.jar $@
+
+
