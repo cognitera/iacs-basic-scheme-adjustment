@@ -11,15 +11,6 @@ import java.util.Map;
 
 import java.sql.Connection; import java.sql.SQLException; import java.sql.PreparedStatement; import java.sql.CallableStatement; import java.sql.ResultSet; import java.sql.Timestamp; import java.sql.Statement; import java.sql.ResultSetMetaData; import java.sql.Types;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ThreadLocalRandom;
-import java.net.URL;
-import java.net.URISyntaxException;
-
-import javax.sql.DataSource;
-
 import org.junit.Assert;
 
 
@@ -40,25 +31,11 @@ import gr.cognitera.util.base.SCAUtils;
 
 import gr.cognitera.util.jdbc.DBLoggingUtil;
 import gr.cognitera.util.jdbc.JDBCUtil;
-import gr.cognitera.util.jdbc.PostgreSQLAbstractDAL;
-import gr.cognitera.util.jdbc.ITransaction;
-import gr.cognitera.util.jdbc.ITransactionReturningVoid;
 import gr.cognitera.util.jdbc.ResultSetHelper;
 import gr.cognitera.util.jdbc.ResultSetHelperUtil;
-import gr.cognitera.util.jdbc.PreparedStatementHelper;
-import gr.cognitera.util.jdbc.CallableStatementHelper;
-import gr.cognitera.util.jdbc.ManualTransactionHelper;
-import gr.cognitera.util.jdbc.ConnectionHelper;
 import gr.cognitera.util.jdbc.CustomFieldReader;
-import gr.cognitera.util.jdbc.ChainedImplicitTransaction;
-import gr.cognitera.util.jdbc.ChainedImplicitTransactionReturningVoid;
-import gr.cognitera.util.jdbc.AutocommitExplicitTransaction;
-import gr.cognitera.util.jdbc.AutocommitExplicitTransactionReturningVoid;
-import gr.cognitera.util.jdbc.DataSourceLookupHelper;
-import gr.cognitera.util.jdbc.ConnectionHelper;
-import gr.cognitera.util.io.FileUtil;
+import gr.cognitera.util.jdbc.CustomFieldReaderUtil;
 import gr.cognitera.util.jdbc.ResultSetHelper;
-import gr.cognitera.util.jdbc.ISO8601NoTZImplicitUTCFieldReader;
 import gr.cognitera.util.base.SCAUtils;
 
 
@@ -71,13 +48,6 @@ public class DBRightsTable {
     static {
         klass = DBRightsTable.class;
         logger = Logger.INSTANCE;
-    }
-
-    private static Map<String, CustomFieldReader<?>> prepareFieldOverrides() {
-        final Map<String, CustomFieldReader<?>> rv = new LinkedHashMap<>();
-        Assert.assertNull(rv.put("source", new RightSourceFieldReader()));
-        Assert.assertNull(rv.put("type"  , new RightTypeFieldReader()));
-        return rv;
     }
 
     public static List<Right> readAllRights(final Connection conn ) throws SQLException {
@@ -106,9 +76,11 @@ public class DBRightsTable {
             //            ps.setInt(1, appId);
             rs = ps.executeQuery();
             List<Right> rv = new ArrayList<>();
-            //            final Map<String, CustomFieldReader<?>> customFieldReaders = new LinkedHashMap<>();
             int i = 0;
-            final Map<String, CustomFieldReader<?>> fieldOverrides = prepareFieldOverrides();
+            final Map<String, CustomFieldReader<?>> fieldOverrides =
+                CustomFieldReaderUtil.prepareFieldOverrides(Right.class
+                                                            , new RightSourceFieldReader()
+                                                            , new RightTypeFieldReader());
             while (rs.next()) {
                 logger.trace(".");
                 final Right right = ResultSetHelper.readObject((org.apache.log4j.Logger)null

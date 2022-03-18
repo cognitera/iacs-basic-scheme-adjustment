@@ -4,14 +4,17 @@ import java.sql.SQLException;
 import java.sql.ResultSet;
 
 
-import org.apache.log4j.Logger;
 import org.junit.Assert;
 
 
 import gr.cognitera.util.jdbc.CustomFieldReader;
 
 public class RightSourceFieldReader implements CustomFieldReader<RightSource> {
-    final static Logger logger = Logger.getLogger(RightSourceFieldReader.class);
+
+    @Override
+    public boolean equals(final Object o) {
+        return o.getClass().equals(this.getClass());
+    }
 
     @Override
     public Class<RightSource> getHandledClass() {

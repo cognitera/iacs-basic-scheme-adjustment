@@ -14,6 +14,11 @@ public class RightTypeFieldReader implements CustomFieldReader<RightType> {
     final static Logger logger = Logger.getLogger(RightTypeFieldReader.class);
 
     @Override
+    public boolean equals(final Object o) {
+        return o.getClass().equals(this.getClass());
+    }
+
+    @Override
     public Class<RightType> getHandledClass() {
         return RightType.class;
     }

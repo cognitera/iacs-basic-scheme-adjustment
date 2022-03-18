@@ -280,56 +280,7 @@ public final class ResultSetHelper {
     }
 
 
-    public static Map<String, CustomFieldReader<?>> prepareFieldOverrides(Logger logger, Object ... columnLabelsAndCustomFieldReaders) {
-        Map<String, CustomFieldReader<?>> rv = new LinkedHashMap<>();
-        boolean customFieldReaderMayAppear = false;
-        List<String> columnLabelsForThisCustomFieldReader = new ArrayList<>();
-        for (int i = 0 ; i < columnLabelsAndCustomFieldReaders.length ; i++) {
-            Object o = columnLabelsAndCustomFieldReaders[i];
-            if (o.getClass()==String.class) {
-                columnLabelsForThisCustomFieldReader.add((String) o);
-                customFieldReaderMayAppear = true;
-            } else if (o instanceof CustomFieldReader) {
-                Assert.assertTrue(String.format("On index [%d] I was not expecting a [%s] yet; yet an object of class [%s] was encountered"
-                                                , i
-                                                , CustomFieldReader.class.getName()
-                                                , o.getClass().getName())
-                                  , customFieldReaderMayAppear);
-                Assert.assertTrue(String.format("On index [%d] I was expecting at least 1 columnLabel to have been accumulated, yet none were present"
-                                                 , i)
-                                  , !columnLabelsForThisCustomFieldReader.isEmpty());
-                CustomFieldReader customFieldReader = (CustomFieldReader) o;
-                for (String columnLabelForThisCustomFieldReader: columnLabelsForThisCustomFieldReader) {
-                    Assert.assertNull(String.format("Column label [%s] already encountered"
-                                                    , columnLabelForThisCustomFieldReader)
-                                      , rv.put(columnLabelForThisCustomFieldReader, customFieldReader));
-                }
-                columnLabelsForThisCustomFieldReader.clear();
-                customFieldReaderMayAppear = false;
-            } else
-                Assert.fail(String.format("On index [%d] an object of class [%s] (which I've no use of) was encountered"
-                                          , i
-                                          , o.getClass().getName()));
-        }
-        return rv;
-    }
 
-    private static void sanityCheckForFieldOverrides(Class<?> klass, Map<String, CustomFieldReader<?>> fieldOverrides) throws NoSuchFieldException {
-        for (Map.Entry<String, CustomFieldReader<?>> entry: fieldOverrides.entrySet()) {
-            final String fieldOverrideColumnLabel        = entry.getKey();
-            final CustomFieldReader<?> customFieldReader = entry.getValue();
-            Field field = klass.getField(fieldOverrideColumnLabel);
-            Class<?> fieldClass = field.getType();
-            Assert.assertTrue(String.format("The class of field [%s] in class [%s] was [%s] whereas the customFieldReader of class [%s] can only handle class [%s]"
-                                            , field.getName()
-                                            , klass.getName()
-                                            , fieldClass.getName()
-                                            , customFieldReader.getClass().getName()
-                                            , customFieldReader.getHandledClass().getName())
-                              ,fieldClass == customFieldReader.getHandledClass());
-            // don't worry about assignability at this point, strict equality will do for the time being
-        }
-    }
 
 
     public static Set<String> prepareIgnoredFields(final String ...fieldnames) {
@@ -367,7 +318,7 @@ public final class ResultSetHelper {
             Assert.assertNotNull(logger);
             if (fieldOverrides==null)
                 fieldOverrides = new LinkedHashMap<>();
-            sanityCheckForFieldOverrides(klass, fieldOverrides);
+            CustomFieldReaderUtil.sanityCheckForFieldOverrides(klass, fieldOverrides);
             sanityCheckForIgnoredFields(klass, ignoredFields);
             final Constructor<T> constructor = klass.getConstructor();
             final T t = constructor.newInstance();
